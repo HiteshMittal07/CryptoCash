@@ -133,18 +133,19 @@ pragma solidity ^0.8.6;
 //     }
 
 // }
-
+import "./Note.sol";
 
 contract Hello{
     address payable public owner;
     // payable constructor can recieve ethers
+    event NewContract(address indexed creator, address indexed newContract);
     constructor() payable {
         owner=payable(msg.sender);
     }
     // this functiin can also recieve ethers
-    function getOwner()public view returns(address){
-        return owner;
-    }
+    // function getOwner()public view returns(address){
+    //     return owner;
+    // }
     mapping (address=>uint) balances;
     function deposit() public payable {
         balances[msg.sender]+=msg.value;
@@ -153,18 +154,27 @@ contract Hello{
     function getBalances()public view returns(uint){
         return balances[msg.sender];
     }
-    function withdraw() public {
-        require(balances[msg.sender]>0,"Account is Empty");
-        uint amount=balances[msg.sender];
+    // function withdraw() public {
+    //     require(balances[msg.sender]>0,"Account is Empty");
+    //     uint amount=balances[msg.sender];
+    //     balances[msg.sender]-=amount;
+    //     (bool success,)=msg.sender.call{value:amount}("amount withdrawn froom smart contarct");
+    //     require(success, "failed to recieve ether");
+    //     // emit Transaction(address(this), msg.sender, amount);
+    // }
+    // function transfer(address payable _to,uint _amount) public{
+    //     require(balances[msg.sender]>=_amount,"you dont have enough balance");
+    //     balances[msg.sender]-=_amount;
+    //     (bool success,)=_to.call{value:_amount}("ether transfered");
+    //     require(success,"failed");
+    // }
+
+    function createNote(uint amount)public returns(address){
+        require(amount>0,"amount must be greater than 0");
+        require(amount*(10**18)<=address(this).balance,"amount must be greater than 0");
         balances[msg.sender]-=amount;
-        (bool success,)=msg.sender.call{value:amount}("amount withdrawn froom smart contarct");
-        require(success, "failed to recieve ether");
-        // emit Transaction(address(this), msg.sender, amount);
-    }
-    function transfer(address payable _to,uint _amount) public{
-        require(balances[msg.sender]>=_amount,"you dont have enough balance");
-        balances[msg.sender]-=_amount;
-        (bool success,)=_to.call{value:_amount}("ether transfered");
-        require(success,"failed");
+        Note newContractInstance = new Note{value: amount*(10**18)}();
+        emit NewContract(msg.sender, address(newContractInstance));
+        return address(newContractInstance);
     }
 }
