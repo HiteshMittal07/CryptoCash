@@ -21,13 +21,11 @@ contract Hello{
     function getBalances()public view returns(uint){
         return balances[msg.sender];
     }
-    function createNote(uint amount)public returns(address){
-        require(amount>0,"amount must be greater than 0");
-        require(amount*(10**18)<=address(this).balance,"amount must be greater than 0");
+    function createNote(uint amount)public{
+        require(amount<=address(this).balance,"amount must be greater than 0");
         balances[msg.sender]-=amount;
-        Note newContractInstance = new Note{value: amount*(10**18)}();
+        Note newContractInstance = new Note{value: amount}();
         emit NewContract(msg.sender, address(newContractInstance));
-        return address(newContractInstance);
     }
 
 }

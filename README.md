@@ -11,3 +11,6 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.js
 ```
+
+contract address:-"0xa2202D3148ac0F0F44b0bED0153248a0524EdA8D"
+Link:-https://sepolia-blockscout.scroll.io/address/0xa2202D3148ac0F0F44b0bED0153248a0524EdA8D/transactions#address-tabs
