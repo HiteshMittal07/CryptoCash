@@ -21,10 +21,10 @@ contract Hello{
     function getBalances()public view returns(uint){
         return balances[msg.sender];
     }
-    function createNote(uint amount)public{
+    function createNote(uint amount,uint passKey)public{
         require(amount<=address(this).balance,"amount must be greater than 0");
         balances[msg.sender]-=amount;
-        Note newContractInstance = new Note{value: amount}();
+        Note newContractInstance = new Note{value: amount}(passKey);
         emit NewContract(msg.sender, address(newContractInstance));
     }
 

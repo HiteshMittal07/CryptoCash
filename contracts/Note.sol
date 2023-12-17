@@ -2,10 +2,12 @@
 pragma solidity ^0.8.6;
 
 contract Note{
-    constructor()payable {
-       
+    uint private pass;
+    constructor(uint passKey)payable {
+       pass=passKey;
     }
-    function withdraw()public{
-        payable(msg.sender).call{value: address(this).balance}("");
+    function withdraw(uint pass1)public{
+        require(pass1==pass,"Give the correct pass key to claim");
+        selfdestruct(payable(msg.sender));
     }
 }
