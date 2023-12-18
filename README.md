@@ -7,24 +7,24 @@ This project allows users to create crypto notes backed by deposited funds in a 
 The system involves two contracts: the main contract and individual note contracts.
 
 1. **Main Contract**: Handles depositing funds and creating note contracts.
-2. **Note Contract**: Created for each crypto note, holds deposited amount and allows redemption.
+2. **Note Contract**: Created for each crypto note, holds deposited amount and allows redemption. Requires a PIN for withdrawal.
 
 ## Workflow
 
 1. **Deposit Funds**: Users deposit crypto into the main contract.
-2. **Create Note**: Specify an amount and create a note. This action deploys a new note contract with the specified amount.
+2. **Create Note**: Specify an amount and a PIN, then create a note. This action deploys a new note contract with the specified amount and PIN.
 3. **Crypto Note Creation**: 
 
-    - A new note contract is created with a constructor that holds the deposited amount.
-    - The note contract contains a `withdraw` function that allows redemption of the deposited amount.
+    - A new note contract is created with a constructor that holds the deposited amount and PIN.
+    - The note contract contains a `withdraw` function that requires the PIN for redemption.
 
-4. **Generate QR Code**: Users can download a QR code containing the note contract's address.
+4. **Generate QR Code**: Users can download a QR code containing the note contract's address and PIN.
 5. **Redeem Crypto Note**: 
 
-    - Scan the QR code or input the contract address manually.
+    - Scan the QR code or input the contract address and PIN manually.
     - Decoding the contract address to retrieve the contract instance and ABI.
     - Creating a contract instance using the ABI and contract address.
-    - Call the `withdraw` function from the contract instance to redeem the funds.
+    - Call the `withdraw` function from the contract instance, providing the PIN to redeem the funds.
 
 ## Code Example
 
@@ -39,8 +39,27 @@ contract MainContract {
     }
 
     // Create note function
-    function createNote(uint256 amount) public {
-        // Logic for creating a new note contract with the specified amount
-        // Deploy a new note contract with constructor payable(amount)
+    function createNote(uint256 amount, uint256 pin) public {
+        // Logic for creating a new note contract with the specified amount and PIN
+        // Deploy a new note contract with constructor payable(amount, pin)
+    }
+}
+
+// Note contract for holding deposited amount and allowing redemption with a PIN
+contract NoteContract {
+    uint256 public depositedAmount;
+    uint256 public notePIN;
+
+    // Constructor to initialize depositedAmount and notePIN
+    constructor(uint256 amount, uint256 pin) payable {
+        depositedAmount = amount;
+        notePIN = pin;
+    }
+
+    // Withdraw function to redeem deposited amount, requires PIN
+    function withdraw(uint256 inputPIN) public {
+        require(inputPIN == notePIN, "Invalid PIN");
+        // Logic to withdraw the deposited amount
+        // selfdestruct(payable(msg.sender));
     }
 }
