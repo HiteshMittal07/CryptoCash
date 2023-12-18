@@ -45,7 +45,7 @@ function App() {
     if (currentNetworkId !== `0x${Number(network).toString(16)}`) {
       await switchNetwork(1442);
     }
-    const contractAddress = "0xE11814D0f43E163CAd7a36d82133316e9104df5E";
+    const contractAddress = "0x1fa3dE0885E4Ca43fF57138A95A67111330AfDa5";
     const contractABI = abi.abi;
     const contractAbi = abi2.abi;
     try {
@@ -112,8 +112,9 @@ function App() {
     const { contract } = state;
     const { contractRead } = state;
     const note = document.querySelector("#note").value;
+    const pass = document.querySelector("#pass").value;
     const option = ethers.parseEther(note);
-    const transaction = await contract.createNote(option);
+    const transaction = await contract.createNote(option, pass);
     await transaction.wait();
     console.log("note created");
   }
@@ -122,12 +123,15 @@ function App() {
     const { contract2 } = NoteState;
     console.log(contract2);
     try {
-      const transaction = await contract2.withdraw();
+      const transaction = await contract2.withdraw(Number(passkey));
       await transaction.wait();
     } catch (error) {
       console.log(error);
     }
     console.log("withdrawal done");
+    console.log("Passkey entered:", passkey);
+    // Additional actions or API calls can be performed here
+    setShowModal(false);
   }
 
   function downloadQRCodePDF() {
@@ -163,10 +167,20 @@ function App() {
   );
 
   const [showScanner, setShowScanner] = useState(false);
+
+  const [passkey, setPasskey] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  // const handleWithdraw = () => {
+  //   // Logic to handle withdrawal with the entered passkey
+  //   console.log("Passkey entered:", passkey);
+  //   // Additional actions or API calls can be performed here
+  //   setShowModal(false); // Close the modal after handling the passkey
+  // };
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
-        <div className="col-6">
+        <div className="col-lg-6 col-md-8 col-sm-10">
           <button className="btn btn-dark" onClick={connectWallet}>
             Connect Wallet
           </button>
@@ -198,6 +212,17 @@ function App() {
               placeholder="Enter Amount of Note"
             />
           </div>
+          <div className="mb-3">
+            <label htmlFor="note" className="form-label">
+              Create Pass Key
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="pass"
+              placeholder="Create Pass Key"
+            />
+          </div>
 
           <button className="btn btn-success me-2" onClick={CreateNote}>
             Create Note
@@ -209,60 +234,87 @@ function App() {
           >
             Download Text File
           </button>
-          <button className="btn btn-danger" onClick={withdraw}>
-            Withdraw
-          </button>
+
+          <div>
+            {/* Withdraw Modal */}
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn btn-danger"
+            >
+              Withdraw
+            </button>
+            {showModal && (
+              <div className="modal">
+                <div className="modal-content">
+                  <span className="close" onClick={() => setShowModal(false)}>
+                    &times;
+                  </span>
+                  <h2>Enter Passkey</h2>
+                  <input
+                    type="password"
+                    placeholder="Enter your passkey"
+                    value={passkey}
+                    onChange={(e) => setPasskey(e.target.value)}
+                    className="form-control mb-3"
+                  />
+                  <button onClick={withdraw} className="btn btn-dark">
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* QR Scanner */}
           <button
-            onClick={() => {
-              setShowScanner(!showScanner);
-            }}
-            className="btn btn-danger"
+            onClick={() => setShowScanner(!showScanner)}
+            className="btn btn-danger mt-3"
           >
             Open QR Scanner
           </button>
-        </div>
-        <div className="qr-scanner-container">
-          {showScanner && (
-            <QrReader
-              onResult={(result, error) => {
-                if (!!result) {
-                  setQRText(result?.text);
-                  alert("Qr Scanned Successful");
-                  const contractAbi = abi2.abi;
-                  try {
-                    const { provider } = state;
-                    const { signer } = state;
-                    console.log(result?.text);
-                    const contract2 = new ethers.Contract(
-                      result?.text,
-                      contractAbi,
-                      signer
-                    );
-                    const contractRead2 = new ethers.Contract(
-                      result?.text,
-                      contractAbi,
-                      provider
-                    );
-                    setNoteState({
-                      provider,
-                      signer,
-                      contract2,
-                      contractRead2,
-                      qrText,
-                    });
-                  } catch (error) {
-                    alert(error);
+          <div className="qr-scanner-container mt-3">
+            {showScanner && (
+              <QrReader
+                onResult={(result, error) => {
+                  if (!!result) {
+                    setQRText(result?.text);
+                    alert("Qr Scanned Successful");
+                    const contractAbi = abi2.abi;
+                    try {
+                      const { provider } = state;
+                      const { signer } = state;
+                      console.log(result?.text);
+                      const contract2 = new ethers.Contract(
+                        result?.text,
+                        contractAbi,
+                        signer
+                      );
+                      const contractRead2 = new ethers.Contract(
+                        result?.text,
+                        contractAbi,
+                        provider
+                      );
+                      setNoteState({
+                        provider,
+                        signer,
+                        contract2,
+                        contractRead2,
+                        qrText,
+                      });
+                    } catch (error) {
+                      alert(error);
+                    }
                   }
-                }
 
-                if (!!error) {
-                  console.info(error);
-                }
-              }}
-              style={{ width: "100%" }}
-            />
-          )}
-          <p>{qrText}</p>
+                  if (!!error) {
+                    console.info(error);
+                  }
+                }}
+                style={{ width: "100%" }}
+              />
+            )}
+            <p>{qrText}</p>
+          </div>
         </div>
       </div>
     </div>
