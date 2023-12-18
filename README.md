@@ -26,28 +26,24 @@ The system involves two contracts: the main contract and individual note contrac
     - Creating a contract instance using the ABI and contract address.
     - Call the `withdraw` function from the contract instance, providing the PIN to redeem the funds.
 
-6. **Usage**:
-
-... (existing usage instructions remain unchanged)
-
 ## Use Cases
 
-### Secure Fund Transfer
+ **Secure Fund Transfer**
 - Users can securely transfer funds by creating crypto notes with specific amounts and PINs, allowing only those with the correct PIN to redeem the funds.
 
-### Gift Certificates or Vouchers
+**Gift Certificates or Vouchers**
 - Businesses can issue digital gift certificates or vouchers by creating crypto notes with designated amounts and sharing them with customers. Customers can redeem these notes when making purchases.
 
-### Controlled Allowances for Children
+**Controlled Allowances for Children**
 - Parents can create crypto notes with predefined allowances for their children. Children can redeem these notes periodically while requiring the specified PIN.
 
-### Time-Locked Payments
+**Time-Locked Payments**
 - Crypto notes can be created with time-locked withdrawals, allowing funds to be released only after a specified period or event.
 
-### Emergency Fund Access
+**Emergency Fund Access**
 - Users can create emergency crypto notes with reserved funds and PINs, providing a safety net for unexpected situations.
 
-### Conditional Payments
+**Conditional Payments**
 - Crypto notes can be used for conditional payments, requiring specific conditions or verification steps before allowing fund withdrawal.
 
 
