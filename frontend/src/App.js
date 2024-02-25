@@ -11,6 +11,7 @@ import { QrReader } from "react-qr-reader";
 import "./Qrscanner.css";
 // import pdfjsLib from "pdfjs-dist/build/pdf";
 
+import { groth16 } from "snarkjs"
 // Set the path to the workerSrc
 import "./App.css";
 function App() {
@@ -115,6 +116,11 @@ function App() {
     const pass = document.querySelector("#pass").value;
     const option = ethers.parseEther(note);
     const transaction = await contract.createNote(option, pass);
+    const { proof, publicSignals } = await groth16.fullProve({number1: 11, number2: 3}, "test1.wasm", "multiplier2_0001.zkey");
+
+    console.log("Proof: ");
+    console.log(JSON.stringify(proof, null, 1));
+
     await transaction.wait();
     console.log("note created");
   }
@@ -125,11 +131,12 @@ function App() {
     try {
       const transaction = await contract2.withdraw(Number(passkey));
       await transaction.wait();
+      console.log("withdrawal done");
+      console.log("Passkey entered:", passkey);
     } catch (error) {
       console.log(error);
+      alert(error);
     }
-    console.log("withdrawal done");
-    console.log("Passkey entered:", passkey);
     // Additional actions or API calls can be performed here
     setShowModal(false);
   }
@@ -171,12 +178,6 @@ function App() {
   const [passkey, setPasskey] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // const handleWithdraw = () => {
-  //   // Logic to handle withdrawal with the entered passkey
-  //   console.log("Passkey entered:", passkey);
-  //   // Additional actions or API calls can be performed here
-  //   setShowModal(false); // Close the modal after handling the passkey
-  // };
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
