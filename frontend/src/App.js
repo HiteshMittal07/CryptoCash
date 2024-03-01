@@ -1,7 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
-// import your abi here
 import abi from "./ABI/Hello.json";
 import abi2 from "./ABI/Note.json";
 import QRCode from "qrcode";
@@ -10,10 +9,17 @@ import { QrReader } from "react-qr-reader";
 // import * as pdfjsLib from "pdfjs-dist";
 import "./Qrscanner.css";
 // import pdfjsLib from "pdfjs-dist/build/pdf";
-
-import { groth16 } from "snarkjs"
+import { BigNumber } from "bignumber.js";
+import crypto from "./modules/crypto-browserify";
+import { groth16 } from "snarkjs";
+import { poseidon } from "circomlibjs";
+import bigInt from "big-integer";
 // Set the path to the workerSrc
+import vkey from "./verification_key.json";
 import "./App.css";
+// const snarkjs = require("snarkjs");
+const snarkjs = require("snarkjs");
+// const fs = require("fs");
 function App() {
   // pdfjsLib.GlobalWorkerOptions.workerSrc = "path/to/pdf.worker.min.js";
   //this useState is created to give the state to different component for extracting the contract from it.
@@ -58,7 +64,7 @@ function App() {
         window.location.reload();
       });
       setAccount(accounts);
-      const provider = new ethers.BrowserProvider(ethereum);
+      const provider = new ethers.providers.Web3Provider(ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         contractAddress,
@@ -104,25 +110,93 @@ function App() {
   async function deposit() {
     const { contract } = state;
     const amount1 = document.querySelector("#depositedAmount").value;
-    const option = { value: ethers.parseEther(amount1) };
+    const option = { value: ethers.utils.parseEther(amount1) };
     const transaction = await contract.deposit(option);
     await transaction.wait();
+  }
+
+  function generateSecureRandomBigNumber(min, max) {
+    const range = new BigNumber(max).minus(min).plus(1);
+    const bytesNeeded = Math.ceil(range.toString(2).length / 8);
+    const maxChunkSize = 6; // Maximum number of bytes per iteration
+    const numChunks = Math.ceil(bytesNeeded / maxChunkSize);
+    let randomValue = new BigNumber("0");
+
+    for (let i = 0; i < numChunks; i++) {
+      const bytesToGenerate = Math.min(
+        maxChunkSize,
+        bytesNeeded - i * maxChunkSize
+      );
+      const randomBytes = crypto.randomBytes(bytesToGenerate);
+
+      let chunkValue = new BigNumber("0");
+      for (let j = 0; j < bytesToGenerate; j++) {
+        chunkValue = chunkValue.times(256).plus(randomBytes.readUInt8(j));
+      }
+
+      randomValue = randomValue.times(256 ** bytesToGenerate).plus(chunkValue);
+    }
+
+    return randomValue.mod(range).plus(min);
   }
 
   async function CreateNote() {
     const { contract } = state;
     const { contractRead } = state;
     const note = document.querySelector("#note").value;
-    const pass = document.querySelector("#pass").value;
-    const option = ethers.parseEther(note);
-    const transaction = await contract.createNote(option, pass);
-    const { proof, publicSignals } = await groth16.fullProve({number1: 11, number2: 3}, "test1.wasm", "multiplier2_0001.zkey");
+    const option = ethers.utils.parseEther(note);
+    // const transaction = await contract.createNote(option);
+    const min = new BigNumber("1000000000000000000000"); // 10^21
+    const max = new BigNumber("9999999999999999999999"); // Just an example upper limit
+    const nullifier = generateSecureRandomBigNumber(min, max);
+    const secret = generateSecureRandomBigNumber(min, max);
+    console.log(nullifier.toString(10));
+    const bigNullifier = parseInt(nullifier.toString(10));
+    const nullifierHash = poseidon([bigInt(bigNullifier)]);
+    console.log(nullifierHash);
+    const input = {
+      nullifier: bigNullifier,
+      nullifierHash: nullifierHash,
+    };
+    console.time("proof time");
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      input,
+      "Withdraw.wasm",
+      "Withdraw_0001.zkey"
+    );
+    console.timeEnd("proof time");
 
     console.log("Proof: ");
     console.log(JSON.stringify(proof, null, 1));
+    console.log(publicSignals);
+    const proof2 = packToSolidityProof(proof);
+    console.log(proof2);
+    // const vKey = JSON.parse(fs.readFileSync("verification_key.json"));
 
-    await transaction.wait();
-    console.log("note created");
+    const res = await groth16.verify(vkey, publicSignals, proof);
+    console.log(res);
+
+    if (res === true) {
+      console.log("Verification OK");
+    } else {
+      console.log("Invalid proof");
+    }
+
+    // await transaction.wait();
+    // console.log("note created");
+  }
+
+  function packToSolidityProof(proof) {
+    return [
+      proof.pi_a[0],
+      proof.pi_a[1],
+      proof.pi_b[0][1],
+      proof.pi_b[0][0],
+      proof.pi_b[1][1],
+      proof.pi_b[1][0],
+      proof.pi_c[0],
+      proof.pi_c[1],
+    ];
   }
 
   async function withdraw() {
@@ -211,17 +285,6 @@ function App() {
               className="form-control"
               id="note"
               placeholder="Enter Amount of Note"
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="note" className="form-label">
-              Create Pass Key
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              id="pass"
-              placeholder="Create Pass Key"
             />
           </div>
 

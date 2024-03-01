@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 
 async function main() {
-  const contract = await hre.ethers.deployContract("Hello");
+  const contract = await hre.ethers.deployContract("Main");
   await contract.waitForDeployment();
   console.log("contract address:", contract.target);
 }
