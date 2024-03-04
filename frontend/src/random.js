@@ -1,6 +1,11 @@
-const { BigNumber } = require("bignumber.js");
-const crypto = require("crypto");
-const { poseidon } = require("circomlibjs");
+import BigNumber from 'bignumber.js';
+import crypto from "./modules/crypto-browserify";
+export default function random() {
+    const min = new BigNumber("1000000000000000000000"); // 10^21
+    const max = new BigNumber("9999999999999999999999"); // Just an example upper limit
+    const nullifier = generateSecureRandomBigNumber(min, max);
+    return nullifier;
+}
 function generateSecureRandomBigNumber(min, max) {
   const range = new BigNumber(max).minus(min).plus(1);
   const bytesNeeded = Math.ceil(range.toString(2).length / 8);
@@ -26,12 +31,3 @@ function generateSecureRandomBigNumber(min, max) {
   return randomValue.mod(range).plus(min);
 }
 
-// Usage example
-const min = new BigNumber("1000000000000000000000"); // 10^21
-const max = new BigNumber("9999999999999999999999"); // Just an example upper limit
-const randomNumber = generateSecureRandomBigNumber(min, max);
-const nullifier = generateSecureRandomBigNumber(min, max);
-const secret = generateSecureRandomBigNumber(min, max);
-const buffer = Buffer.from(nullifier.toString());
-const nullifierHash = poseidon(buffer);
-console.log(nullifierHash.toString("hex"));
