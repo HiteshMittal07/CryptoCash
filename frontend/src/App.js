@@ -17,6 +17,7 @@ import bigInt from "big-integer";
 // Set the path to the workerSrc
 import vkey from "./verification_key.json";
 import "./App.css";
+// import rbigint from "./random";
 import random from "./random";
 import { packToSolidityProof } from "./packToSolidityProof";
 // const snarkjs = require("snarkjs");
@@ -48,7 +49,7 @@ function App() {
     if (currentNetworkId !== `0x${Number(network).toString(16)}`) {
       await switchNetwork(1442);
     }
-    const contractAddress = "0xc8a9Bd4936A8783a67345aEB5790677a2fF7aFa0";
+    const contractAddress = "0xe7eFb981F9Bdc7f57D9728ac63568E2f02E6B809";
     const contractABI = abi.abi;
     try {
       const { ethereum } = window;
@@ -145,6 +146,7 @@ function App() {
     const nullifierHash = poseidon([bigInt(bigNullifier)]);
     const commitmentHash = poseidon([bigInt(bigNullifier), bigInt(bigSecret)]);
     const commitment = toNoteHex(commitmentHash);
+    console.log(commitment);
     const transaction = await contract2.createNote(commitment, option);
     console.log(nullifierHash);
     console.log(commitmentHash);
@@ -162,6 +164,12 @@ function App() {
         : BigNumber(number).toString(16);
     return "0x" + str.padStart(length * 2, "0");
   }
+  function hash() {
+    const nullifierhash =
+      "9458234504980109431341054700433752368413903067635891654843886628343206835829";
+    const hash2 = toNoteHex(nullifierhash);
+    console.log(hash2);
+  }
   async function withdraw(result, error) {
     if (!!result) {
       setQRText(result?.text);
@@ -170,7 +178,7 @@ function App() {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const contractAddress = "0xc8a9Bd4936A8783a67345aEB5790677a2fF7aFa0";
+        const contractAddress = "0xe7eFb981F9Bdc7f57D9728ac63568E2f02E6B809";
         const contractABI = abi.abi;
         const contract = new ethers.Contract(
           contractAddress,
@@ -179,14 +187,16 @@ function App() {
         );
         const contract2 = contract.connect(signer);
         const address = await signer.getAddress();
-        console.log(address);
-        console.log(result?.text);
         const values = result?.text.split(",");
-        console.log(values[0]);
         const nullifier = parseInt(values[0]);
         const secret = parseInt(values[1]);
         const nullifierHash = values[2];
         const commitmentHash = values[3];
+        console.log(address);
+        console.log(nullifier);
+        console.log(nullifierHash);
+        console.log(secret);
+        console.log(commitmentHash);
         console.time("proof time");
         const input = {
           nullifier: nullifier,
@@ -200,22 +210,21 @@ function App() {
           "Withdraw.wasm",
           "Withdraw_0001.zkey"
         );
-        console.timeEnd("proof time");
-        console.log(nullifier);
-        console.log(JSON.stringify(proof, null, 1));
         setProof(proof);
         const proof2 = packToSolidityProof(proof);
         const nullifierHash1 = toNoteHex(nullifierHash);
         const commitment = toNoteHex(commitmentHash);
-        console.log(commitment);
         console.log(nullifierHash1);
+        console.log(commitment);
         console.log(proof2);
+        console.log(typeof proof2);
         try {
           const transaction = await contract2.withdraw(
             proof2,
             nullifierHash1,
             commitment,
-            address
+            address,
+            { gasLimit: 21000 }
           );
           await transaction.wait();
         } catch (error) {
@@ -288,6 +297,7 @@ function App() {
           <button className="btn btn-dark" onClick={connectWallet}>
             Connect Wallet
           </button>
+          <button onClick={hash}>hash</button>
 
           <div className="mb-3">
             <label htmlFor="depositedAmount" className="form-label">

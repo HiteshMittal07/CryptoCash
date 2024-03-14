@@ -1,9 +1,15 @@
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
-  const contract = await hre.ethers.deployContract("Groth16Verifier");
-  await contract.waitForDeployment();
-  console.log("contract address:", contract.target);
+  const Verifier = await ethers.getContractFactory("Groth16Verifier");
+  const verifier = await Verifier.deploy();
+  await verifier.waitForDeployment();
+  const address1 = verifier.getAddress();
+  const Main = await ethers.getContractFactory("Main");
+  const main = await Main.deploy(address1);
+  await main.waitForDeployment();
+  const address = await main.getAddress();
+  console.log(address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

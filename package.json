@@ -6,9 +6,12 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
+    "chai": "^4.4.1",
     "create-react-app": "^5.0.1",
     "dotenv": "^16.3.1",
+    "ffjavascript": "^0.2.63",
     "hardhat-circom": "^3.3.2",
+    "mocha": "^10.3.0",
     "rustup": "^1.0.10"
   }
 }

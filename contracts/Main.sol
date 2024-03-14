@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
-import "./verifier.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+interface Iverifier{
+    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[3] calldata _pubSignals)external view returns (bool);
+}
 contract Main is ReentrancyGuard{
     // address payable public owner;
     // payable constructor can recieve ethers
-    Groth16Verifier verifier;
     struct CommitmentStore {
     bool used;
     bool spent;
@@ -15,13 +17,14 @@ contract Main is ReentrancyGuard{
     uint256 spentDate;
     uint256 denomination;
     }
-
+    Iverifier public immutable verifier;
     event Created(address creator, uint amount);
     mapping(bytes32 => bool) public nullifierHashes; // Nuffifier Hashes are used to nullify a BunnyNote so we know they have been spent
     // We store all the crypto cash data and make sure there are no accidental deposits twice and this allows us to query for transaction details later
     mapping(bytes32 => CommitmentStore) public commitments;
     address payable public _owner;
-    constructor() payable {
+    constructor(Iverifier _verifier) payable {
+        verifier = _verifier;
         _owner=payable(msg.sender);
     }
     mapping (address=>uint) balances;
@@ -57,7 +60,7 @@ contract Main is ReentrancyGuard{
         commitments[_commitment].recipient=_recipient;
         commitments[_commitment].spentDate=block.timestamp;
         commitments[_commitment].spent=true;
-        (bool success,)=_recipient.call{value: commitments[_commitment].denomination}("");
-        require(success,"Transfer failed");
+        (bool success,)=_recipient.call{gas:200000,value:commitments[_commitment].denomination}("");
+        require(success,"invalid");
     }
 }

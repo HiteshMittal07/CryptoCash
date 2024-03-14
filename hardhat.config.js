@@ -12,9 +12,9 @@ module.exports = {
     //   url: GOERLI_URL,
     //   accounts: [PRIVATE_KEY],
     // },
-    // hardhat: {
-    //   chainId: 31337,
-    // },
+    hardhat: {
+      chainId: 31337,
+    },
     zkEVM: {
       url: "https://rpc.public.zkevm-test.net",
       accounts: [PRIVATE_KEY],

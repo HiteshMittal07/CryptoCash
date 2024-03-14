@@ -1,10 +1,15 @@
-import BigNumber from 'bignumber.js';
+// import crypto from "./modules/crypto-browserify";
+// import { utils } from "ffjavascript";
+// export default function rbigint() {
+//   return utils.leBuff2int(crypto.randomBytes(31));
+// }
+import BigNumber from "bignumber.js";
 import crypto from "./modules/crypto-browserify";
 export default function random() {
-    const min = new BigNumber("1000000000000000000000"); // 10^21
-    const max = new BigNumber("9999999999999999999999"); // Just an example upper limit
-    const nullifier = generateSecureRandomBigNumber(min, max);
-    return nullifier;
+  const min = new BigNumber("1000000000000000000000"); // 10^21
+  const max = new BigNumber("9999999999999999999999"); // Just an example upper limit
+  const nullifier = generateSecureRandomBigNumber(min, max);
+  return nullifier;
 }
 function generateSecureRandomBigNumber(min, max) {
   const range = new BigNumber(max).minus(min).plus(1);
@@ -30,4 +35,3 @@ function generateSecureRandomBigNumber(min, max) {
 
   return randomValue.mod(range).plus(min);
 }
-
