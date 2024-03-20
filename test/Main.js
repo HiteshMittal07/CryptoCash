@@ -1,7 +1,9 @@
 // example testing of the smart contract working with custom arguments
+const { BigNumber } = require("ethers");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const snarkjs = require("snarkjs");
+
 function packToSolidityProof(proof) {
   return [
     proof.pi_a[0],
@@ -20,9 +22,10 @@ describe("Main", function () {
   let deployer;
   let Verifier;
   let verifier;
-  beforeEach(async () => {
-    const accounts = ethers.getSigners();
+  it("creates a note", async () => {
+    const accounts = await ethers.getSigners();
     deployer = accounts[0];
+    // console.log(deployer);
     Verifier = await ethers.getContractFactory("Groth16Verifier");
     verifier = await Verifier.deploy();
     await verifier.waitForDeployment();
@@ -30,19 +33,21 @@ describe("Main", function () {
     Main = await ethers.getContractFactory("Main");
     main = await Main.deploy(address1);
     await main.waitForDeployment();
-    const address = await main.getAddress();
-    console.log(address);
-  });
-  it("creates a note", async () => {
-    const option = { value: ethers.parseEther("12") };
-    const tx = await main.deposit(option);
-    await tx.wait();
-    const amount = ethers.parseEther("10");
+    const address2 = await main.getAddress();
+    console.log(address2);
+    let balance = await ethers.provider.getBalance(deployer.address);
+    console.log(balance);
+    const option = ethers.parseEther("10");
+    const fee = main.calculateFee(option);
     const commitment =
       "0x2c91c978985a5328930cf5f77ac704c1a327db79110707ceb4f3e0742b5915b3";
-    const tx1 = await main.createNote(commitment, amount);
+    const tx1 = await main.createNote(commitment, option, {
+      value: option.add(fee),
+    });
     await tx1.wait();
 
+    balance = await ethers.provider.getBalance(deployer.address);
+    console.log(balance);
     const nullifier = parseInt("4056069145807454800581");
     const secret = parseInt("6280904180439752355679");
     const address = "0x11ae45Ab10039D1EA50A54edd2638200fa3aFaEa";
@@ -76,5 +81,15 @@ describe("Main", function () {
       address
     );
     await transaction.wait();
+    balance = await ethers.provider.getBalance(address);
+    console.log(balance);
+
+    const transaction1 = await main.withdraw(
+      proof2,
+      nullifierHash1,
+      commitment,
+      address
+    );
+    await transaction1.wait();
   });
 });

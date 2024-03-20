@@ -9,7 +9,7 @@ import { QrReader } from "react-qr-reader";
 // import * as pdfjsLib from "pdfjs-dist";
 import "./Qrscanner.css";
 // import pdfjsLib from "pdfjs-dist/build/pdf";
-import { BigNumber } from "bignumber.js";
+// import { BigNumber } from "bignumber.js";
 import crypto from "./modules/crypto-browserify";
 import { groth16 } from "snarkjs";
 import { poseidon } from "circomlibjs";
@@ -18,6 +18,7 @@ import bigInt from "big-integer";
 import vkey from "./verification_key.json";
 import "./App.css";
 // import rbigint from "./random";
+import { BigNumber } from "ethers";
 import random from "./random";
 import { packToSolidityProof } from "./packToSolidityProof";
 // const snarkjs = require("snarkjs");
@@ -46,10 +47,11 @@ function App() {
       method: "eth_chainId",
     });
 
-    if (currentNetworkId !== `0x${Number(network).toString(16)}`) {
-      await switchNetwork(1442);
-    }
-    const contractAddress = "0xe7eFb981F9Bdc7f57D9728ac63568E2f02E6B809";
+    // if (currentNetworkId !== `0x${Number(network).toString(16)}`) {
+    //   await switchNetwork(1442);
+    // }
+    const contractAddress = "0x85a286A678F9F434F0b6ab6547bA4Ab840295A28";
+    // const contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
     const contractABI = abi.abi;
     try {
       const { ethereum } = window;
@@ -94,16 +96,6 @@ function App() {
     }
   }
 
-  async function deposit() {
-    const { contract } = state;
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const contract2 = contract.connect(signer);
-    const amount1 = document.querySelector("#depositedAmount").value;
-    const option = { value: ethers.utils.parseEther(amount1) };
-    const transaction = await contract2.deposit(option);
-    await transaction.wait();
-  }
   function generateSecureRandomBigNumber(min, max) {
     const range = new BigNumber(max).minus(min).plus(1);
     const bytesNeeded = Math.ceil(range.toString(2).length / 8);
@@ -128,6 +120,93 @@ function App() {
 
     return randomValue.mod(range).plus(min);
   }
+  async function CreateNote1() {
+    const { contract } = state;
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract1 = contract.connect(signer);
+    const note = document.querySelector("#note").value;
+    const option = { value: ethers.utils.parseEther(note) };
+    const commitmentHash =
+      "20159348664310517594321724268484965985500253805075981218504982571504652326323";
+    const commitment = ethers.BigNumber.from(commitmentHash)._hex;
+    const tx1 = await contract1.createNote(commitment, option);
+    await tx1.wait();
+
+    // balance = await ethers.provider.getBalance(deployer.address);
+    // console.log(balance);
+    const nullifier = parseInt("4056069145807454800581");
+    const secret = parseInt("6280904180439752355679");
+    const address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+    const nullifierHash =
+      "10062829781726759867607233874903475719260266720356579819079933182888540094468";
+    const input = {
+      nullifier: nullifier,
+      nullifierHash: nullifierHash,
+      recipient: address,
+      secret: secret,
+      commitment: commitmentHash,
+    };
+    const test1 = ethers.BigNumber.from(
+      "4629604741548106608260839937976265207027033904114029603043531393055162424244"
+    );
+    const test2 = ethers.BigNumber.from(
+      "6885295973002863617550007377755170501366163580148669054007311112029508977375"
+    );
+    const test3 = ethers.BigNumber.from(
+      "13519347286785945869237144779544870342532919312456380179774907747295815700061"
+    );
+    const test4 = ethers.BigNumber.from(
+      "9741216730826252104108451966222898499472604153099703158435470282180604812265"
+    );
+    const test5 = ethers.BigNumber.from(
+      "11181359794897668101073473737088451706842177883647019631808078833516372476471"
+    );
+    const test6 = ethers.BigNumber.from(
+      "15328654739934972336556966778015369340837671102563534006789791588252378269421"
+    );
+    const test7 = ethers.BigNumber.from(
+      "12266166608762024524594087296721751829805364723651062783475454125799766669733"
+    );
+    const test8 = ethers.BigNumber.from(
+      "4780556612309164027511118608828824040066380883736977290303706308401307750037"
+    );
+    console.log(test1._hex);
+    const proof2 = [
+      test1._hex,
+      test2._hex,
+      test3._hex,
+      test4._hex,
+      test5._hex,
+      test6._hex,
+      test7._hex,
+      test8._hex,
+    ];
+    const nullifierHash1 =
+      "0x163f5c1d326f8c7386de0b029693117bc1f9c4bcc09d2862389e1d7a3aa3c004";
+    try {
+      const transaction = await contract1.withdraw(
+        proof2,
+        nullifierHash1,
+        commitment,
+        address,
+        { gasLimit: 21000 }
+      );
+      await transaction.wait();
+    } catch (error) {
+      console.log(error);
+    }
+    // balance = await ethers.provider.getBalance(address);
+    // console.log(balance);
+
+    // const transaction1 = await main.withdraw(
+    //   proof2,
+    //   nullifierHash1,
+    //   commitment,
+    //   address
+    // );
+    // await transaction1.wait();
+  }
 
   async function CreateNote() {
     const { contract } = state;
@@ -135,40 +214,105 @@ function App() {
     const signer = provider.getSigner();
     const contract2 = contract.connect(signer);
     const note = document.querySelector("#note").value;
-    const option = ethers.utils.parseEther(note);
-    const nullifier = random();
-    const secret = random();
-    const nullifier1 = nullifier.toString(10);
-    const secret1 = secret.toString(10);
-    console.log(nullifier.toString(10));
-    const bigNullifier = parseInt(nullifier1);
-    const bigSecret = parseInt(secret1);
-    const nullifierHash = poseidon([bigInt(bigNullifier)]);
-    const commitmentHash = poseidon([bigInt(bigNullifier), bigInt(bigSecret)]);
-    const commitment = toNoteHex(commitmentHash);
+
+    // const nullifier = random();
+    // const secret = random();
+    // const nullifier1 = nullifier.toString(10);
+    // const secret1 = secret.toString(10);
+    // console.log(nullifier.toString(10));
+    // const bigNullifier = parseInt(nullifier1);
+    // const bigSecret = parseInt(secret1);
+    // const nullifierHash = poseidon([bigInt(bigNullifier)]);
+    // const commitmentHash = poseidon([bigInt(bigNullifier), bigInt(bigSecret)]);
+    // const commitment = toNoteHex(commitmentHash);
+    // const commitment = 0x1e588147f365558efc5cd184d4dc94b43f919f6bb10b4121f5038699092c8deb;
+    const commitment = ethers.BigNumber.from(
+      "13725760264266012175428937010324166955533782804720749816378413236072345275883"
+    )._hex;
+    // console.log(commitment);
+    // const option = ethers.utils.parseEther(note);
+    // const fee = await contract2.calculateFee(option);
+    // const transaction = await contract2.createNote(commitment, option, {
+    //   value: option.add(fee),
+    // });
+    // await transaction.wait();
+    // console.log(nullifierHash);
+    // console.log(commitmentHash);
+    // const multivalueString = `${nullifier1},${secret1},${nullifierHash},${commitmentHash}`;
+    // setnoteAddress(multivalueString);
+    // console.log("note created");
+    // window.alert("Note Created, You can download it");
+    const address = await signer.getAddress();
+    console.log(address);
+    // const input = {
+    //   nullifier: bigNullifier,
+    //   nullifierHash: nullifierHash,
+    //   recipient: address,
+    //   secret: bigSecret,
+    //   commitment: commitmentHash,
+    // };
+    // const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+    //   input,
+    //   "Withdraw.wasm",
+    //   "Withdraw_0001.zkey"
+    // );
+    // setProof(proof);
+    // const proof2 = packToSolidityProof(proof);
+    const proof2 = [
+      ethers.BigNumber.from(
+        "5864220050082001083612579974035064855945763860269362214473989515537059524379"
+      )._hex,
+      ethers.BigNumber.from(
+        "521259583062900644716062702087835148772232329983387290872776655191147321594"
+      )._hex,
+      ethers.BigNumber.from(
+        "1146209616802744522529415134381718269925226010549713875057336661742929899753"
+      )._hex,
+      ethers.BigNumber.from(
+        "14689361846255194004190402906316714904259456979540071575268310927841074302786"
+      )._hex,
+      ethers.BigNumber.from(
+        "5297978878441267899004181253962874434359332295655751944410804421756495195445"
+      )._hex,
+      ethers.BigNumber.from(
+        "8932808923748759807930847919814230092209972653627488073805648808878164525921"
+      )._hex,
+      ethers.BigNumber.from(
+        "18496600873096512428514294366645318069927991605539029518356006198680312787462"
+      )._hex,
+      ethers.BigNumber.from(
+        "10072363684301547698824020573454085420956940710714864040648322277157226167235"
+      )._hex,
+    ];
+
+    // const nullifierHash1 = toNoteHex(nullifierHash);
+    const nullifierHash1 = ethers.BigNumber.from(
+      "14448754364484435303451218854782103820941572483011932101053125584759447642969"
+    )._hex;
+    console.log(nullifierHash1);
     console.log(commitment);
-    const transaction = await contract2.createNote(commitment, option);
-    console.log(nullifierHash);
-    console.log(commitmentHash);
-    const multivalueString = `${nullifier1},${secret1},${nullifierHash},${commitmentHash}`;
-    setnoteAddress(multivalueString);
-    await transaction.wait();
-    console.log("note created");
-    window.alert("Note Created, You can download it");
+    console.log(proof2);
+    try {
+      const transaction = await contract2.withdraw(
+        proof2,
+        nullifierHash1,
+        commitment,
+        address,
+        { gasLimit: 3000000 }
+      );
+      await transaction.wait();
+    } catch (error) {
+      console.log(error);
+      alert(error);
+    }
   }
 
   function toNoteHex(number, length = 32) {
     const str =
       number instanceof Buffer
         ? number.toString("hex")
-        : BigNumber(number).toString(16);
+        : bigInt(number).toString(16);
     return "0x" + str.padStart(length * 2, "0");
-  }
-  function hash() {
-    const nullifierhash =
-      "9458234504980109431341054700433752368413903067635891654843886628343206835829";
-    const hash2 = toNoteHex(nullifierhash);
-    console.log(hash2);
   }
   async function withdraw(result, error) {
     if (!!result) {
@@ -178,7 +322,7 @@ function App() {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const contractAddress = "0xe7eFb981F9Bdc7f57D9728ac63568E2f02E6B809";
+        const contractAddress = "0x867a0FF92c41d41CD8191da465293A750e499769";
         const contractABI = abi.abi;
         const contract = new ethers.Contract(
           contractAddress,
@@ -186,7 +330,7 @@ function App() {
           provider
         );
         const contract2 = contract.connect(signer);
-        const address = await signer.getAddress();
+        const address = "0x11ae45Ab10039D1EA50A54edd2638200fa3aFaEa";
         const values = result?.text.split(",");
         const nullifier = parseInt(values[0]);
         const secret = parseInt(values[1]);
@@ -296,23 +440,6 @@ function App() {
         <div className="col-lg-6 col-md-8 col-sm-10">
           <button className="btn btn-dark" onClick={connectWallet}>
             Connect Wallet
-          </button>
-          <button onClick={hash}>hash</button>
-
-          <div className="mb-3">
-            <label htmlFor="depositedAmount" className="form-label">
-              Enter Amount to Deposit
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              id="depositedAmount"
-              placeholder="Enter Amount to Deposit"
-            />
-          </div>
-
-          <button className="btn btn-primary me-2" onClick={deposit}>
-            Deposit
           </button>
 
           <div className="mb-3">

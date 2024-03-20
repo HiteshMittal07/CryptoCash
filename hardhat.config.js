@@ -8,10 +8,10 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 module.exports = {
   solidity: "0.8.6",
   networks: {
-    // sepolia: {
-    //   url: GOERLI_URL,
-    //   accounts: [PRIVATE_KEY],
-    // },
+    sepolia: {
+      url: "https://sepolia-rpc.scroll.io",
+      accounts: [PRIVATE_KEY],
+    },
     hardhat: {
       chainId: 31337,
     },
