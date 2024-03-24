@@ -3,8 +3,8 @@ import crypto from "../modules/crypto-browserify";
 export default function random() {
   const min = new BigNumber("1000000000000000000000"); // 10^21
   const max = new BigNumber("9999999999999999999999"); // Just an example upper limit
-  const nullifier = generateSecureRandomBigNumber(min, max);
-  return nullifier;
+  const random_number = generateSecureRandomBigNumber(min, max);
+  return parseInt(random_number.toString(10));
 }
 function generateSecureRandomBigNumber(min, max) {
   const range = new BigNumber(max).minus(min).plus(1);

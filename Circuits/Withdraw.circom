@@ -21,7 +21,7 @@ template withdraw() {
     commitmentPoseidon1.inputs[0] <== nullifier;
     _nullifier <== commitmentPoseidon1.out;
     commitment === _commitment; 
-    _nullifier === nullifierHash;
+    _nullifier === nullifierHash; // checking here whether you have nullifier and nullifierHash corresponding to each other or not.
 
     recipientSquare <== recipient * recipient;
 }

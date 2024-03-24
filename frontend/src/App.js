@@ -18,7 +18,9 @@ import "./App.css";
 // import rbigint from "./random";
 import { BigNumber } from "ethers";
 import random from "./Utils/random";
+
 import { Proofa, Proofb, Proofc } from "./Utils/packToSolidityProof";
+import { CreateQR } from "./Utils/createQR";
 const snarkjs = require("snarkjs");
 function App() {
   const [state, setState] = useState({
@@ -91,117 +93,6 @@ function App() {
     }
   }
 
-  function generateSecureRandomBigNumber(min, max) {
-    const range = new BigNumber(max).minus(min).plus(1);
-    const bytesNeeded = Math.ceil(range.toString(2).length / 8);
-    const maxChunkSize = 6; // Maximum number of bytes per iteration
-    const numChunks = Math.ceil(bytesNeeded / maxChunkSize);
-    let randomValue = new BigNumber("0");
-
-    for (let i = 0; i < numChunks; i++) {
-      const bytesToGenerate = Math.min(
-        maxChunkSize,
-        bytesNeeded - i * maxChunkSize
-      );
-      const randomBytes = crypto.randomBytes(bytesToGenerate);
-
-      let chunkValue = new BigNumber("0");
-      for (let j = 0; j < bytesToGenerate; j++) {
-        chunkValue = chunkValue.times(256).plus(randomBytes.readUInt8(j));
-      }
-
-      randomValue = randomValue.times(256 ** bytesToGenerate).plus(chunkValue);
-    }
-
-    return randomValue.mod(range).plus(min);
-  }
-  async function CreateNote1() {
-    const { contract } = state;
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const contract1 = contract.connect(signer);
-    const note = document.querySelector("#note").value;
-    const option = { value: ethers.utils.parseEther(note) };
-    const commitmentHash =
-      "20159348664310517594321724268484965985500253805075981218504982571504652326323";
-    const commitment = ethers.BigNumber.from(commitmentHash)._hex;
-    const tx1 = await contract1.createNote(commitment, option);
-    await tx1.wait();
-
-    // balance = await ethers.provider.getBalance(deployer.address);
-    // console.log(balance);
-    const nullifier = parseInt("4056069145807454800581");
-    const secret = parseInt("6280904180439752355679");
-    const address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
-    const nullifierHash =
-      "10062829781726759867607233874903475719260266720356579819079933182888540094468";
-    const input = {
-      nullifier: nullifier,
-      nullifierHash: nullifierHash,
-      recipient: address,
-      secret: secret,
-      commitment: commitmentHash,
-    };
-    const test1 = ethers.BigNumber.from(
-      "4629604741548106608260839937976265207027033904114029603043531393055162424244"
-    );
-    const test2 = ethers.BigNumber.from(
-      "6885295973002863617550007377755170501366163580148669054007311112029508977375"
-    );
-    const test3 = ethers.BigNumber.from(
-      "13519347286785945869237144779544870342532919312456380179774907747295815700061"
-    );
-    const test4 = ethers.BigNumber.from(
-      "9741216730826252104108451966222898499472604153099703158435470282180604812265"
-    );
-    const test5 = ethers.BigNumber.from(
-      "11181359794897668101073473737088451706842177883647019631808078833516372476471"
-    );
-    const test6 = ethers.BigNumber.from(
-      "15328654739934972336556966778015369340837671102563534006789791588252378269421"
-    );
-    const test7 = ethers.BigNumber.from(
-      "12266166608762024524594087296721751829805364723651062783475454125799766669733"
-    );
-    const test8 = ethers.BigNumber.from(
-      "4780556612309164027511118608828824040066380883736977290303706308401307750037"
-    );
-    console.log(test1._hex);
-    const proof2 = [
-      test1._hex,
-      test2._hex,
-      test3._hex,
-      test4._hex,
-      test5._hex,
-      test6._hex,
-      test7._hex,
-      test8._hex,
-    ];
-    const nullifierHash1 =
-      "0x163f5c1d326f8c7386de0b029693117bc1f9c4bcc09d2862389e1d7a3aa3c004";
-    try {
-      const transaction = await contract1.withdraw(
-        proof2,
-        nullifierHash1,
-        commitment,
-        address,
-        { gasLimit: 21000 }
-      );
-      await transaction.wait();
-    } catch (error) {
-      console.log(error);
-    }
-    // balance = await ethers.provider.getBalance(address);
-    // console.log(balance);
-
-    // const transaction1 = await main.withdraw(
-    //   proof2,
-    //   nullifierHash1,
-    //   commitment,
-    //   address
-    // );
-    // await transaction1.wait();
-  }
   const [nul, setNul] = useState(null);
   const [com, setCom] = useState(null);
   async function CreateNote() {
@@ -385,32 +276,22 @@ function App() {
     }
   }
 
-  function downloadQRCodePDF() {
-    console.log(noteAddress);
-    const textForQR = noteAddress.toString(); // Replace with your desired text
+  async function downloadQRCodePDF(noteString) {
+    const textForQR = noteString.toString();
 
-    // Create QR code using QRCode.js library
-    const qrCanvas = document.createElement("canvas");
-    QRCode.toCanvas(
-      qrCanvas,
-      textForQR,
-      { width: 200, height: 200 },
-      function (error) {
-        if (error) {
-          console.error("Error generating QR code:", error);
-        } else {
-          // Create a PDF document using jsPDF
-          const pdf = new jsPDF();
-          const qrDataURL = qrCanvas.toDataURL("image/jpeg"); // Convert QR canvas to data URL
-
-          // Embed QR code image into the PDF
-          pdf.addImage(qrDataURL, "JPEG", 15, 15, 180, 180); // Adjust position and size as needed
-
-          // Download the PDF
-          pdf.save("QRCode.pdf");
-        }
-      }
+    // Embed QR code image into the PDF
+    const qrDataURL = await CreateQR(textForQR);
+    const pdf = new jsPDF();
+    pdf.addImage(qrDataURL, "JPEG", 25, 10, 100, 100); // Adjust position and size as needed
+    pdf.text("This is note generated from CryptoCash.netlify.app", 25, 120);
+    pdf.setFontSize(10);
+    pdf.text(
+      "To verify the note and withdraw funds, go to cryptoCash official website and open the withdraw note tab",
+      25,
+      130
     );
+    // Download the PDF
+    pdf.save("QRCode.pdf");
   }
 
   const [qrText, setQRText] = useState(
