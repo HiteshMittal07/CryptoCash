@@ -2,7 +2,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import abi from "./ABI/Main.json";
-import abi2 from "./ABI/Main.json";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import { QrReader } from "react-qr-reader";
@@ -15,18 +14,13 @@ import { groth16 } from "snarkjs";
 import { poseidon } from "circomlibjs";
 import bigInt from "big-integer";
 // Set the path to the workerSrc
-import vkey from "./verification_key.json";
 import "./App.css";
 // import rbigint from "./random";
 import { BigNumber } from "ethers";
-import random from "./random";
-import { packToSolidityProof } from "./packToSolidityProof";
-// const snarkjs = require("snarkjs");
+import random from "./Utils/random";
+import { Proofa, Proofb, Proofc } from "./Utils/packToSolidityProof";
 const snarkjs = require("snarkjs");
-// const fs = require("fs");
 function App() {
-  // pdfjsLib.GlobalWorkerOptions.workerSrc = "path/to/pdf.worker.min.js";
-  //this useState is created to give the state to different component for extracting the contract from it.
   const [state, setState] = useState({
     provider: null,
     signer: null,
@@ -50,8 +44,9 @@ function App() {
     // if (currentNetworkId !== `0x${Number(network).toString(16)}`) {
     //   await switchNetwork(1442);
     // }
-    const contractAddress = "0x85a286A678F9F434F0b6ab6547bA4Ab840295A28";
-    // const contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+    // const contractAddress = "0x3e8Cd0D2a0416c93512Ad00cA2bAEc4fAa72119F";
+    // const contractAddress = "0x792A9Fd227C690f02beB23678a52BF766849DFc0";
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
     const contractABI = abi.abi;
     try {
       const { ethereum } = window;
@@ -207,43 +202,60 @@ function App() {
     // );
     // await transaction1.wait();
   }
-
+  const [nul, setNul] = useState(null);
+  const [com, setCom] = useState(null);
   async function CreateNote() {
-    const { contract } = state;
+    const contractABI = abi.abi;
+    const contractAddress = "0xfDF7622023B08ce1f640Fda0F730486Bc375b623";
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const contract2 = contract.connect(signer);
+    const contract = new ethers.Contract(contractAddress, contractABI, signer);
     const note = document.querySelector("#note").value;
 
-    // const nullifier = random();
-    // const secret = random();
-    // const nullifier1 = nullifier.toString(10);
-    // const secret1 = secret.toString(10);
-    // console.log(nullifier.toString(10));
-    // const bigNullifier = parseInt(nullifier1);
-    // const bigSecret = parseInt(secret1);
-    // const nullifierHash = poseidon([bigInt(bigNullifier)]);
-    // const commitmentHash = poseidon([bigInt(bigNullifier), bigInt(bigSecret)]);
-    // const commitment = toNoteHex(commitmentHash);
-    // const commitment = 0x1e588147f365558efc5cd184d4dc94b43f919f6bb10b4121f5038699092c8deb;
-    const commitment = ethers.BigNumber.from(
-      "13725760264266012175428937010324166955533782804720749816378413236072345275883"
-    )._hex;
-    // console.log(commitment);
-    // const option = ethers.utils.parseEther(note);
-    // const fee = await contract2.calculateFee(option);
-    // const transaction = await contract2.createNote(commitment, option, {
-    //   value: option.add(fee),
-    // });
-    // await transaction.wait();
-    // console.log(nullifierHash);
-    // console.log(commitmentHash);
-    // const multivalueString = `${nullifier1},${secret1},${nullifierHash},${commitmentHash}`;
-    // setnoteAddress(multivalueString);
-    // console.log("note created");
-    // window.alert("Note Created, You can download it");
+    const nullifier = random();
+    const secret = random();
+    const nullifier1 = nullifier.toString(10);
+    const secret1 = secret.toString(10);
+    console.log(nullifier.toString(10));
+    const bigNullifier = parseInt(nullifier1);
+    const bigSecret = parseInt(secret1);
+    const nullifierHash = poseidon([bigInt(bigNullifier)]);
+    const commitmentHash = poseidon([bigInt(bigNullifier), bigInt(bigSecret)]);
+    const commitment = toNoteHex(commitmentHash);
+    console.log(commitment);
+    const option = ethers.utils.parseEther(note);
+    const transaction = await contract.createNote(commitment, {
+      value: option,
+    });
+    await transaction.wait();
+    console.log(nullifierHash);
+    console.log(commitmentHash);
+    const multivalueString = `${nullifier1},${secret1},${nullifierHash},${commitmentHash}`;
+    setnoteAddress(multivalueString);
+    console.log("note created");
+    window.alert("Note Created, You can download it");
     const address = await signer.getAddress();
     console.log(address);
+    const input = {
+      nullifier: bigNullifier,
+      nullifierHash: nullifierHash,
+      recipient: address,
+      secret: bigSecret,
+      commitment: commitmentHash,
+    };
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      input,
+      "Withdraw.wasm",
+      "Withdraw_0001.zkey"
+    );
+    setProof(proof);
+    setNul(nullifierHash);
+    setCom(commitment);
+  }
+
+  async function withdrawnote() {
+    // const address = await signer.getAddress();
+    // console.log(address);
     // const input = {
     //   nullifier: bigNullifier,
     //   nullifierHash: nullifierHash,
@@ -257,46 +269,33 @@ function App() {
     //   "Withdraw_0001.zkey"
     // );
     // setProof(proof);
-    // const proof2 = packToSolidityProof(proof);
-    const proof2 = [
-      ethers.BigNumber.from(
-        "5864220050082001083612579974035064855945763860269362214473989515537059524379"
-      )._hex,
-      ethers.BigNumber.from(
-        "521259583062900644716062702087835148772232329983387290872776655191147321594"
-      )._hex,
-      ethers.BigNumber.from(
-        "1146209616802744522529415134381718269925226010549713875057336661742929899753"
-      )._hex,
-      ethers.BigNumber.from(
-        "14689361846255194004190402906316714904259456979540071575268310927841074302786"
-      )._hex,
-      ethers.BigNumber.from(
-        "5297978878441267899004181253962874434359332295655751944410804421756495195445"
-      )._hex,
-      ethers.BigNumber.from(
-        "8932808923748759807930847919814230092209972653627488073805648808878164525921"
-      )._hex,
-      ethers.BigNumber.from(
-        "18496600873096512428514294366645318069927991605539029518356006198680312787462"
-      )._hex,
-      ethers.BigNumber.from(
-        "10072363684301547698824020573454085420956940710714864040648322277157226167235"
-      )._hex,
-    ];
+    // setNul(nullifierHash);
+    // setCom(commitment);
+    const contractABI = abi.abi;
+    const contractAddress = "0xfDF7622023B08ce1f640Fda0F730486Bc375b623";
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+    const address = await signer.getAddress();
 
-    // const nullifierHash1 = toNoteHex(nullifierHash);
-    const nullifierHash1 = ethers.BigNumber.from(
-      "14448754364484435303451218854782103820941572483011932101053125584759447642969"
-    )._hex;
+    const proofa = Proofa(Proof);
+    const proofb = Proofb(Proof);
+    const proofc = Proofc(Proof);
+    console.log(proofa);
+    console.log(proofb);
+    console.log(proofc);
+    // const proof2 = packToSolidityProof(proof);
+    const nullifierHash1 = toNoteHex(nul);
     console.log(nullifierHash1);
-    console.log(commitment);
-    console.log(proof2);
+    console.log(com);
+    // console.log(proof2);
     try {
-      const transaction = await contract2.withdraw(
-        proof2,
+      const transaction = await contract.verify(
+        proofa,
+        proofb,
+        proofc,
         nullifierHash1,
-        commitment,
+        com,
         address,
         { gasLimit: 3000000 }
       );
@@ -318,7 +317,6 @@ function App() {
     if (!!result) {
       setQRText(result?.text);
       alert("Qr Scanned Successful");
-      const contractAbi = abi2.abi;
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
@@ -355,38 +353,28 @@ function App() {
           "Withdraw_0001.zkey"
         );
         setProof(proof);
-        const proof2 = packToSolidityProof(proof);
-        const nullifierHash1 = toNoteHex(nullifierHash);
-        const commitment = toNoteHex(commitmentHash);
-        console.log(nullifierHash1);
-        console.log(commitment);
-        console.log(proof2);
-        console.log(typeof proof2);
-        try {
-          const transaction = await contract2.withdraw(
-            proof2,
-            nullifierHash1,
-            commitment,
-            address,
-            { gasLimit: 21000 }
-          );
-          await transaction.wait();
-        } catch (error) {
-          console.log(error);
-          alert(error);
-        }
-        // Additional actions or API calls can be performed here
-        setShowModal(false);
-
-        // const res = await snarkjs.groth16.verify(vkey, publicSignals, proof);
-        // console.log(res);
-
-        // if (res === true) {
-        //   console.log("Verification OK");
-        //   alert("Verified");
-        // } else {
-        //   console.log("Invalid proof");
+        // const proof2 = packToSolidityProof(proof);
+        // const nullifierHash1 = toNoteHex(nullifierHash);
+        // const commitment = toNoteHex(commitmentHash);
+        // console.log(nullifierHash1);
+        // console.log(commitment);
+        // console.log(proof2);
+        // console.log(typeof proof2);
+        // try {
+        //   const transaction = await contract2.withdraw(
+        //     proof2,
+        //     nullifierHash1,
+        //     commitment,
+        //     address,
+        //     { gasLimit: 21000 }
+        //   );
+        //   await transaction.wait();
+        // } catch (error) {
+        //   console.log(error);
+        //   alert(error);
         // }
+        // // Additional actions or API calls can be performed here
+        // setShowModal(false);
       } catch (error) {
         alert(error);
       }
@@ -456,6 +444,9 @@ function App() {
 
           <button className="btn btn-success me-2" onClick={CreateNote}>
             Create Note
+          </button>
+          <button className="btn btn-dark" onClick={withdrawnote}>
+            Withdraw Note
           </button>
           <button
             id="downloadButton"

@@ -9,7 +9,7 @@ module.exports = {
   solidity: "0.8.6",
   networks: {
     sepolia: {
-      url: "https://sepolia-rpc.scroll.io",
+      url: "https://sepolia.infura.io/v3/159b7960b9944758a7d7b268c6b334ab",
       accounts: [PRIVATE_KEY],
     },
     hardhat: {
