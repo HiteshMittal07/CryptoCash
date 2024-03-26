@@ -1,32 +1,61 @@
 import random from "../Utils/random";
-import abi from "../ABI";
 import { ethers } from "ethers";
 import { commitmentHash, nullifierHash } from "../Utils/createHash";
-import { getContract, getWeb3Provider } from "../web3/web3";
-import { CreateQR } from "../Utils/createQR";
+import {
+  CreateCash,
+  getContract,
+  getContractRead,
+  getWeb3Provider,
+  toHex,
+} from "../web3/web3";
 import { downloadQRCodePDF } from "../Utils/downloadQR";
-async function CreateNote() {
-  const contractAddress = "0xfDF7622023B08ce1f640Fda0F730486Bc375b623";
-  const provider = getWeb3Provider();
-  const contract = getContract(provider, contractAddress);
-  const note = document.querySelector("#note").value;
 
-  const nullifier = random();
-  const secret = random();
-  const nullifier_Hash = nullifierHash(nullifier);
-  const commitment_Hash = commitmentHash(nullifier, secret);
-  const commitment = ethers.BigNumber.from(commitment_Hash)._hex;
-  console.log(commitment);
-  const option = ethers.utils.parseEther(note);
-  const transaction = await contract.createNote(commitment, {
-    value: option,
-  });
-  await transaction.wait();
+function Create() {
+  async function CreateNote() {
+    const contractAddress = "0xfDF7622023B08ce1f640Fda0F730486Bc375b623";
+    const provider = getWeb3Provider();
+    const contract = getContract(provider, contractAddress);
+    const contractRead = getContractRead(provider, contractAddress);
+    const denomination = document.querySelector("#note").value;
 
-  contract.on("Created", async (creator, amount) => {
-    const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash}`;
-    await downloadQRCodePDF(noteString);
-  });
+    contractRead.on("Created", async (creator, amount, event) => {
+      alert("Created");
+      const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash}`;
+      event.removeListener();
+      await downloadQRCodePDF(noteString);
+    });
+    const nullifier = random();
+    const secret = random();
+    const nullifier_Hash = nullifierHash(parseInt(nullifier));
+    const commitment_Hash = commitmentHash(
+      parseInt(nullifier),
+      parseInt(secret)
+    );
+    const commitment = toHex(commitment_Hash);
+    console.log(nullifier);
+    const transaction = await CreateCash(contract, commitment, denomination);
+    await transaction.wait();
+  }
+
+  return (
+    <div>
+      <div className="mb-3">
+        <label htmlFor="note" className="form-label">
+          Enter Amount of Note
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          id="note"
+          placeholder="Enter Amount of Note"
+        />
+      </div>
+
+      <button className="btn btn-success me-2" onClick={CreateNote}>
+        Create Note
+      </button>
+    </div>
+  );
 }
 
-export default CreateNote;
+export default Create;

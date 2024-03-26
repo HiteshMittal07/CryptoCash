@@ -21,6 +21,11 @@ import random from "./Utils/random";
 
 import { Proofa, Proofb, Proofc } from "./Utils/packToSolidityProof";
 import { CreateQR } from "./Utils/createQR";
+import Create from "./Components/CreateNote";
+import ScanNoteButton, { VerifyPage } from "./Components/VerifyNotes";
+import Home from "./Components/Home";
+import Router from "./routes/Router";
+import Header from "./Components/Header";
 const snarkjs = require("snarkjs");
 function App() {
   const [state, setState] = useState({
@@ -304,59 +309,10 @@ function App() {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-6 col-md-8 col-sm-10">
-          <button className="btn btn-dark" onClick={connectWallet}>
-            Connect Wallet
-          </button>
-
-          <div className="mb-3">
-            <label htmlFor="note" className="form-label">
-              Enter Amount of Note
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              id="note"
-              placeholder="Enter Amount of Note"
-            />
-          </div>
-
-          <button className="btn btn-success me-2" onClick={CreateNote}>
-            Create Note
-          </button>
-          <button className="btn btn-dark" onClick={withdrawnote}>
-            Withdraw Note
-          </button>
-          <button
-            id="downloadButton"
-            className="btn btn-success me-2"
-            onClick={downloadQRCodePDF}
-          >
-            Download Text File
-          </button>
-          {/* QR Scanner */}
-          <button
-            onClick={() => setShowScanner(!showScanner)}
-            className="btn btn-danger mt-3"
-          >
-            Open QR Scanner
-          </button>
-          <div className="qr-scanner-container mt-3">
-            {showScanner && (
-              <QrReader
-                onResult={(result, error) => {
-                  withdraw(result, error);
-                }}
-                style={{ width: "100%" }}
-              />
-            )}
-            <p>{qrText}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <diV>
+      <Header />
+      <Router />
+    </diV>
   );
 }
 
