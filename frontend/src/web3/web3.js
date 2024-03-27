@@ -2,8 +2,9 @@ import { ethers, providers } from "ethers";
 import abi from "../ABI/Main.json";
 import { Proofa, Proofb, Proofc } from "../Utils/packToSolidityProof";
 export const contractAddress = {
-  Sepolia_testnet: "0xfDF7622023B08ce1f640Fda0F730486Bc375b623",
-  zkEVM_testnet: "",
+  Sepolia_testnet: "0xcb9c202880AC40cb4846CA24e07d97D01202abf8",
+  arbitrum_sepolia: "0xe591A89874b21e4F462Bd2DdbcbF27384E872ea5",
+  scroll_Sepolia: "0xB70d7E5a736D8EEae7148928cB8b6f233bb6D467",
 };
 export function getWeb3Provider() {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -19,15 +20,26 @@ export const getContract = (provider, address) => {
   return new ethers.Contract(address, contractABI, signer);
 };
 
-export const getContractRead=(provider,address)=>{
-  const contractABI=abi.abi;
-  return new ethers.Contract(address,contractABI,provider);
-}
+export const getContractRead = (provider, address) => {
+  const contractABI = abi.abi;
+  return new ethers.Contract(address, contractABI, provider);
+};
 
 export async function CreateCash(contract, commitment, denomination) {
   return await contract.createNote(commitment, {
     value: ethers.utils.parseEther(denomination),
   });
+}
+
+export async function switchNetwork(selectedValue) {
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: `0x${Number(selectedValue).toString(16)}` }],
+    });
+  } catch (error) {
+    console.error("Error switching network:", error);
+  }
 }
 
 export async function verify(

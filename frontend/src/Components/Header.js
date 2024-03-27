@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 const Header = () => {
   return (
-    <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark bg-transparent">
+    <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark">
       <div className="container">
         <Link className="navbar-brand" to="/">
           CryptoCash

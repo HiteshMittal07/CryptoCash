@@ -1,6 +1,7 @@
 import Home from "../Components/Home";
 import { Routes, Route } from "react-router-dom";
 import ScanNoteButton from "../Components/VerifyNotes";
+import Create from "../Components/CreateNote";
 const Router = () => {
   return (
     <Routes>
@@ -11,6 +12,7 @@ const Router = () => {
           <ScanNoteButton dialogTitle="Scan a CrptoCash Note"></ScanNoteButton>
         }
       />
+      <Route path="/create" element={<Create />} />
     </Routes>
   );
 };

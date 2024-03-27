@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 import "./verifier.sol";
-contract Main{
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+contract Main is ReentrancyGuard{
     // address payable public owner;
     // payable constructor can recieve ethers
     event Created(address creator, uint amount);
@@ -49,7 +50,7 @@ contract Main{
      * @param _commitment : hash of commitment (nullifier,secret)
      * @param _recipient : address to which the withdrawn funds should transfer
      */
-    function verify(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient)public{
+    function verify(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient)public nonReentrant{
       require(commitments[_commitment].used,"Unused Note");
       require(!nullifierHashes[_nullifierHash],"This note has been already spent");
       require(!commitments[_commitment].verified,"This note has been already verified");
