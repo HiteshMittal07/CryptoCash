@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 export default function Home() {
   return (
     <div className="container mt-4">
-      <h1>Select Testnet</h1>
+      <h1>Create a Note</h1>
+      <h2 className="ms-3 mt-5">Select Testnet</h2>
       <div className="row mt-4">
         <div className="col-md-4 mb-4">
           <Link to="/create" state={{ from: "11155111" }} className="card">

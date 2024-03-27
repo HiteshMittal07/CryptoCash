@@ -6,9 +6,11 @@ import { isMobile } from "react-device-detect";
 import { Tooltip } from "@mui/material";
 import Button from "@mui/material/Button";
 import {
+  getAddress,
   getContract,
   getWeb3Provider,
   requestAccounts,
+  switchNetwork,
   toHex,
   verify,
 } from "../web3/web3";
@@ -162,16 +164,18 @@ async function withdrawNote(result, error) {
   if (!!result) {
     alert("Qr Scanned Successful");
     try {
-      const contractAddress = "0xcb9c202880AC40cb4846CA24e07d97D01202abf8";
-      const provider = getWeb3Provider();
-      const contract = getContract(provider, contractAddress);
-      const address = await requestAccounts(provider);
       const values = result?.text.split(",");
       const nullifier = parseInt(values[0]);
       console.log(nullifier);
       const secret = parseInt(values[1]);
       const nullifierHash = values[2];
       const commitmentHash = values[3];
+      const network_Id = values[4];
+      await switchNetwork(network_Id);
+      const contractAddress = getAddress(network_Id);
+      const provider = getWeb3Provider();
+      const contract = getContract(provider, contractAddress);
+      const address = await requestAccounts(provider);
       const Proof = await generateProof(
         nullifier,
         nullifierHash,
@@ -188,6 +192,7 @@ async function withdrawNote(result, error) {
           address
         );
         await transaction.wait();
+        window.alert("Withdraw Successful");
       } catch (error) {
         console.log(error);
         alert(error);

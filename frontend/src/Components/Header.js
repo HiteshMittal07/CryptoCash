@@ -1,6 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
-const Header = () => {
+const Header = (props) => {
+  const truncateWalletAddress = (address, length = 4) => {
+    if (!address) return "";
+    const start = address.substring(0, length);
+    const end = address.substring(address.length - length);
+    return `${start}...${end}`;
+  };
+  const address = localStorage.getItem("account");
   return (
     <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark">
       <div className="container">
@@ -24,6 +31,19 @@ const Header = () => {
                 Verify Note
               </Link>
             </li>
+            {!window.ethereum.isConnected() ? (
+              <li className="nav-item">
+                <button className="btn btn-light" onClick={props.connectWallet}>
+                  Connect Wallet
+                </button>
+              </li>
+            ) : (
+              <li className="nav-item ms-1">
+                <button className="btn btn-light" onClick={props.connectWallet}>
+                  {truncateWalletAddress(address)}
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       </div>

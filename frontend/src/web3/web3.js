@@ -40,6 +40,15 @@ export const getAddress = (Id) => {
     return contractAddress.arbitrum_sepolia;
   }
 };
+export const getNetworkName = (Id) => {
+  if (Id === "11155111") {
+    return "Sepolia_testnet";
+  } else if (Id === "534351") {
+    return "Scroll_Sepolia";
+  } else if (Id === "421614") {
+    return "Arbitrum_Sepolia";
+  }
+};
 export async function switchNetwork(selectedValue) {
   try {
     await window.ethereum.request({

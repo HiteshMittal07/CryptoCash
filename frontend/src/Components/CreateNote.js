@@ -6,6 +6,7 @@ import {
   getAddress,
   getContract,
   getContractRead,
+  getNetworkName,
   getWeb3Provider,
   switchNetwork,
   toHex,
@@ -19,6 +20,7 @@ function Create() {
   async function CreateNote() {
     await switchNetwork(network_ID);
     const contractAddress = getAddress(network_ID);
+    const networkName = getNetworkName(network_ID);
     const provider = getWeb3Provider();
     const contract = getContract(provider, contractAddress);
     const contractRead = getContractRead(provider, contractAddress);
@@ -26,9 +28,9 @@ function Create() {
 
     contractRead.on("Created", async (creator, amount, event) => {
       alert("Created");
-      const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash}`;
+      const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_ID}`;
       event.removeListener();
-      await downloadQRCodePDF(noteString);
+      await downloadQRCodePDF(noteString, denomination, networkName);
     });
     const nullifier = random();
     const secret = random();
