@@ -3,16 +3,22 @@ import { ethers } from "ethers";
 import { commitmentHash, nullifierHash } from "../Utils/createHash";
 import {
   CreateCash,
+  getAddress,
   getContract,
   getContractRead,
   getWeb3Provider,
+  switchNetwork,
   toHex,
 } from "../web3/web3";
 import { downloadQRCodePDF } from "../Utils/downloadQR";
+import { useLocation } from "react-router-dom";
 
 function Create() {
+  const location = useLocation();
+  const network_ID = location.state ? location.state.from : null;
   async function CreateNote() {
-    const contractAddress = "0xe591A89874b21e4F462Bd2DdbcbF27384E872ea5";
+    await switchNetwork(network_ID);
+    const contractAddress = getAddress(network_ID);
     const provider = getWeb3Provider();
     const contract = getContract(provider, contractAddress);
     const contractRead = getContractRead(provider, contractAddress);

@@ -31,6 +31,15 @@ export async function CreateCash(contract, commitment, denomination) {
   });
 }
 
+export const getAddress = (Id) => {
+  if (Id === "11155111") {
+    return contractAddress.Sepolia_testnet;
+  } else if (Id === "534351") {
+    return contractAddress.scroll_Sepolia;
+  } else if (Id === "421614") {
+    return contractAddress.arbitrum_sepolia;
+  }
+};
 export async function switchNetwork(selectedValue) {
   try {
     await window.ethereum.request({
