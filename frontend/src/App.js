@@ -19,7 +19,7 @@ function App() {
   };
 
   return (
-    <div>
+    <div className="my-background">
       <Header connectWallet={connectWallet} />
       <Router />
     </div>

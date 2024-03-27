@@ -9,7 +9,7 @@ const Header = (props) => {
   };
   const address = localStorage.getItem("account");
   return (
-    <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark">
+    <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark bg-transparent shadow">
       <div className="container">
         <Link className="navbar-brand" to="/">
           CryptoCash
@@ -29,6 +29,11 @@ const Header = (props) => {
             <li className="nav-item">
               <Link to="/verify" className="nav-link">
                 Verify Note
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/info" className="nav-link">
+                Info
               </Link>
             </li>
             {!window.ethereum.isConnected() ? (
