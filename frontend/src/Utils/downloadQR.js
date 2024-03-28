@@ -1,8 +1,6 @@
 import { CreateQR } from "./createQR";
 import jsPDF from "jspdf";
-export async function downloadQRCodePDF(noteString, denomination, networkName) {
-  const textForQR = noteString.toString();
-  const qrDataURL = await CreateQR(textForQR);
+export function downloadQRCodePDF(qrDataURL, denomination, networkName) {
   const pdf = new jsPDF();
   var { TextField } = jsPDF.AcroForm;
   pdf.setFontSize(30);

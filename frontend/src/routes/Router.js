@@ -10,9 +10,37 @@ const Router = () => {
       <Route
         path="/verify"
         element={
-          <div className="d-flex justify-content-center align-items-center">
-            <h1 className="text-light mt-5 mb-5">Withdraw Note</h1>
-            <ScanNoteButton dialogTitle="Scan a CrptoCash Note"></ScanNoteButton>
+          <div className="container">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100vh",
+              }}
+            >
+              <h2>Verify Your Note Here</h2>
+              <p>
+                This project, CryptoCash, revolutionizes cryptocurrency by
+                enabling the creation of offline crypto in the form of QR notes.
+                These notes, like traditional fiat currency, can be shared
+                offline, ensuring privacy and security. Built on zero-knowledge
+                proof technology (zk-SNARKs), CryptoCash guarantees that
+                transactions are confidential and secure
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <h3>Withdraw Note</h3>
+                <ScanNoteButton dialogTitle="Scan a CrptoCash Note"></ScanNoteButton>
+              </div>
+            </div>
           </div>
         }
       />

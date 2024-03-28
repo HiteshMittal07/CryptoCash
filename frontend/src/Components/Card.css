@@ -15,7 +15,7 @@
     hsl(22, 100%, 84%),
     hsl(265, 100%, 80%)
   );
-  --container-color: hsla(232, 28%, 25%, 0.432);
+  --container-color: hsla(232, 28%, 25%, 0.274);
   /*========== Font and typography ==========*/
   --body-font: "Poppins", sans-serif;
   --biggest-font-size: 2.25rem;
