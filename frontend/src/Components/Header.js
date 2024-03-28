@@ -11,7 +11,7 @@ const Header = (props) => {
   return (
     <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark bg-transparent shadow">
       <div className="container">
-        <Link className="navbar-brand" to="/">
+        <Link className="navbar-brand" to="/" style={{ fontSize: "25px" }}>
           CryptoCash
         </Link>
         <button

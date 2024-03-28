@@ -10,7 +10,10 @@ const Router = () => {
       <Route
         path="/verify"
         element={
-          <ScanNoteButton dialogTitle="Scan a CrptoCash Note"></ScanNoteButton>
+          <div className="d-flex justify-content-center align-items-center">
+            <h1 className="text-light mt-5 mb-5">Withdraw Note</h1>
+            <ScanNoteButton dialogTitle="Scan a CrptoCash Note"></ScanNoteButton>
+          </div>
         }
       />
       <Route path="/create" element={<Create />} />

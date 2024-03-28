@@ -1,13 +1,24 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.css";
-
+import "./info.css";
 function Info() {
   return (
-    <div className="container mt-5 text-light">
-      <h2 className="mb-4">How to Use My Project</h2>
+    <div className="container mt-5 text-dark" style={{ textAlign: "center" }}>
+      <h1
+        className="mb-5 text-light"
+        style={{
+          textAlign: "center",
+          textTransform: "uppercase",
+          fontWeight: "900",
+        }}
+      >
+        How to Use My Project
+      </h1>
       <div className="row">
         <div className="col-md-6">
-          <h3>1) Select Network:</h3>
+          <h2 className="text-light" style={{ fontWeight: "700" }}>
+            1. Select Network
+          </h2>
           <p>
             Choose from Eth Sepolia, Scroll Sepolia, or Arbitrum Sepolia to
             create your notes.
@@ -39,19 +50,25 @@ function Info() {
             </a>
             .
           </p>
-          <h3>2) Create Note:</h3>
+          <h2 className="text-light" style={{ fontWeight: "700" }}>
+            2. Create Note
+          </h2>
           <p>
             Deposit funds and download your QR note, ensuring it remains
             confidential.
           </p>
-          <h3>3) Verify Note:</h3>
+        </div>
+        <div className="col-md-6">
+          <h2 className="text-light" style={{ fontWeight: "700" }}>
+            3. Verify Note
+          </h2>
           <p>
             Use the "Verify Note" section to scan the QR note and verify its
             authenticity.
           </p>
-        </div>
-        <div className="col-md-6">
-          <h3>4) Withdrawal Verification: </h3>
+          <h2 className="text-light" style={{ fontWeight: "700" }}>
+            4. Withdrawal Verification
+          </h2>
           <p>
             After scanning, a zk proof is generated using a circom circuit,
             which is verified on-chain, ensuring that the withdrawer knows the
