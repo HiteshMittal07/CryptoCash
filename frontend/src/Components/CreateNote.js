@@ -1,5 +1,4 @@
 import random from "../Utils/random";
-import { ethers } from "ethers";
 import { commitmentHash, nullifierHash } from "../Utils/createHash";
 import {
   CreateCash,
@@ -75,7 +74,7 @@ function Create() {
           <div className="card__data">
             <img
               src={link1}
-              alt="card image"
+              alt="card"
               className="card__img"
               style={{ height: "320px" }}
             />

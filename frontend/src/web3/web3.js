@@ -58,17 +58,69 @@ export const getImg = (Id) => {
     return "https://cryptologos.cc/logos/arbitrum-arb-logo.png";
   }
 };
+const getRpc = (Id) => {
+  if (Id === "11155111") {
+    return "https://sepolia.infura.io/v3/";
+  } else if (Id === "534351") {
+    return "https://scroll-sepolia.blockpi.network/v1/rpc/public";
+  } else if (Id === "421614") {
+    return "https://arbitrum-sepolia.blockpi.network/v1/rpc/public";
+  }
+};
+const getBlockUrl = (Id) => {
+  if (Id === "11155111") {
+    return "https://sepolia.etherscan.io";
+  } else if (Id === "534351") {
+    return "https://sepolia.scrollscan.com";
+  } else if (Id === "421614") {
+    return "https://sepolia-explorer.arbitrum.io";
+  }
+};
+export const addNetwork = async (Id) => {
+  const chainId = `0x${Number(Id).toString(16)}`;
+  const rpcUrl = getRpc(Id);
+  const chainName = getNetworkName(Id);
+  const blockUrl = getBlockUrl(Id);
+  const networkParams = {
+    chainId: chainId,
+    chainName: chainName, // Network name
+    nativeCurrency: {
+      name: "Ether",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: [rpcUrl],
+    blockExplorerUrls: [blockUrl], // Block explorer URL
+  };
+  window.ethereum
+    .request({
+      method: "wallet_addEthereumChain",
+      params: [networkParams],
+    })
+    .then(() => {
+      console.log("Custom network added to MetaMask");
+    })
+    .catch((error) => {
+      console.error("Failed to add custom network to MetaMask:", error);
+    });
+};
 export async function switchNetwork(selectedValue) {
-  try {
-    await window.ethereum.request({
+  await window.ethereum
+    .request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: `0x${Number(selectedValue).toString(16)}` }],
+    })
+    .then(() => {
+      console.log("Chain ID is added in MetaMask");
+    })
+    .catch((error) => {
+      if (error.code === 4902) {
+        console.log("Chain ID is not added in MetaMask");
+      } else {
+        console.error(error);
+      }
     });
-  } catch (error) {
-    console.error("Error switching network:", error);
-  }
 }
-
 export async function verify(
   contract,
   proof,

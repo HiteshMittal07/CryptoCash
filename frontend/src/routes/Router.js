@@ -17,7 +17,7 @@ const Router = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "100vh",
+                marginTop: "300px",
               }}
             >
               <h2>Verify Your Note Here</h2>
