@@ -42,11 +42,20 @@ export const getAddress = (Id) => {
 };
 export const getNetworkName = (Id) => {
   if (Id === "11155111") {
-    return "Sepolia_testnet";
+    return "Sepolia testnet";
   } else if (Id === "534351") {
-    return "Scroll_Sepolia";
+    return "Scroll Sepolia";
   } else if (Id === "421614") {
-    return "Arbitrum_Sepolia";
+    return "Arbitrum Sepolia";
+  }
+};
+export const getImg = (Id) => {
+  if (Id === "11155111") {
+    return "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Ethereum_logo_2014.svg/1257px-Ethereum_logo_2014.svg.png";
+  } else if (Id === "534351") {
+    return "https://static.chainbroker.io/mediafiles/projects/scroll/scroll.jpeg";
+  } else if (Id === "421614") {
+    return "https://cryptologos.cc/logos/arbitrum-arb-logo.png";
   }
 };
 export async function switchNetwork(selectedValue) {
