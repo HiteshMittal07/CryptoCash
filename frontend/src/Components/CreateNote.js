@@ -13,7 +13,7 @@ import {
 } from "../web3/web3";
 import { downloadQRCodePDF } from "../Utils/downloadQR";
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CreateQR } from "../Utils/createQR";
 
 function Create() {
@@ -51,6 +51,13 @@ function Create() {
     const transaction = await CreateCash(contract, commitment, denomination);
     await transaction.wait();
   }
+  useEffect(() => {
+    const addNetwork = async () => {
+      const network_Id = location.state.from;
+      await switchNetwork(network_Id);
+    };
+    addNetwork();
+  }, []);
 
   function download() {
     const networkName = getNetworkName(network_ID);

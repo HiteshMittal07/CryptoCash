@@ -1,13 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-const Header = (props) => {
-  const truncateWalletAddress = (address, length = 4) => {
+import { getWeb3Provider, requestAccounts } from "../web3/web3";
+const Header = () => {
+  const [account, setAccount] = useState(null);
+  const truncateWalletAddress = async (address, length = 4) => {
     if (!address) return "";
     const start = address.substring(0, length);
     const end = address.substring(address.length - length);
-    return `${start}...${end}`;
+    setAccount(`${start}...${end}`);
   };
-  const address = localStorage.getItem("account");
+  const connectWallet = async () => {
+    try {
+      const { ethereum } = window;
+      const accounts = await ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      const provider = getWeb3Provider();
+      const address = await requestAccounts(provider);
+      truncateWalletAddress(address);
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  useEffect(() => {
+    const connect = async () => {
+      const provider = getWeb3Provider();
+      const address = await requestAccounts(provider);
+      truncateWalletAddress(address);
+    };
+    connect();
+  }, []);
+
   return (
     <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark bg-transparent shadow">
       <div className="container">
@@ -36,16 +60,16 @@ const Header = (props) => {
                 Info
               </Link>
             </li>
-            {!window.ethereum.isConnected() ? (
+            {!account ? (
               <li className="nav-item">
-                <button className="btn btn-light" onClick={props.connectWallet}>
+                <button className="btn btn-light" onClick={connectWallet}>
                   Connect Wallet
                 </button>
               </li>
             ) : (
               <li className="nav-item ms-1">
-                <button className="btn btn-light" onClick={props.connectWallet}>
-                  {truncateWalletAddress(address)}
+                <button className="btn btn-light" onClick={connectWallet}>
+                  {account}
                 </button>
               </li>
             )}

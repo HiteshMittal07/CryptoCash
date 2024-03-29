@@ -34,8 +34,8 @@ const QRReader = (props) => {
       <QrReader
         ViewFinder={ViewFinder}
         constraints={{ facingMode }}
-        onResult={(result, error) => {
-          withdrawNote(result, error);
+        onResult={async (result, error) => {
+          await getData(result, error);
         }}
       />
     </div>
@@ -160,10 +160,19 @@ export const ViewFinder = () => (
     </svg>
   </>
 );
-async function withdrawNote(result, error) {
+async function getData(result, error) {
   if (!!result) {
     alert("Qr Scanned Successful");
     try {
+      window.ethereum.on("chainChanged", async () => {
+        await withdrawNote(
+          nullifier,
+          secret,
+          nullifierHash,
+          commitmentHash,
+          network_Id
+        );
+      });
       const values = result?.text.split(",");
       const nullifier = parseInt(values[0]);
       console.log(nullifier);
@@ -172,33 +181,67 @@ async function withdrawNote(result, error) {
       const commitmentHash = values[3];
       const network_Id = values[4];
       await switchNetwork(network_Id);
-      const contractAddress = getAddress(network_Id);
-      const provider = getWeb3Provider();
-      const contract = getContract(provider, contractAddress);
-      const address = await requestAccounts(provider);
-      const Proof = await generateProof(
-        nullifier,
-        nullifierHash,
-        address,
-        secret,
-        commitmentHash
-      );
-      try {
-        const transaction = await verify(
-          contract,
-          Proof,
-          toHex(nullifierHash),
-          toHex(commitmentHash),
-          address
+      const chainId = await window.ethereum.request({
+        method: "eth_chainId",
+        params: [],
+      });
+      if (chainId == `0x${Number(network_Id).toString(16)}`) {
+        await withdrawNote(
+          nullifier,
+          secret,
+          nullifierHash,
+          commitmentHash,
+          network_Id
         );
-        await transaction.wait();
-        window.alert("Withdraw Successful");
-      } catch (error) {
-        console.log(error);
-        alert(error);
       }
     } catch (error) {
       console.log(error);
     }
+  }
+}
+async function withdrawNote(
+  nullifier,
+  secret,
+  nullifierHash,
+  commitmentHash,
+  network_Id
+) {
+  try {
+    window.ethereum.removeListener("chainChanged", async () => {
+      await withdrawNote(
+        nullifier,
+        secret,
+        nullifierHash,
+        commitmentHash,
+        network_Id
+      );
+    });
+    const contractAddress = getAddress(network_Id);
+    const provider = getWeb3Provider();
+    const contract = getContract(provider, contractAddress);
+    const address = await requestAccounts(provider);
+    const Proof = await generateProof(
+      nullifier,
+      nullifierHash,
+      address,
+      secret,
+      commitmentHash
+    );
+    try {
+      const transaction = await verify(
+        contract,
+        Proof,
+        toHex(nullifierHash),
+        toHex(commitmentHash),
+        address
+      );
+      await transaction.wait();
+      window.alert("Withdraw Successful");
+    } catch (error) {
+      console.log(error);
+      alert(error);
+    }
+  } catch (error) {
+    console.log(error);
   }
 }

@@ -7,7 +7,7 @@ export function downloadQRCodePDF(qrDataURL, denomination, networkName) {
   pdf.text("Crpto Cash", 65, 14);
   pdf.addImage(qrDataURL, "JPEG", 45, 20, 100, 100);
   pdf.setTextColor("#808080");
-  pdf.text("https://CryptoCash.netlify.app", 25, 140);
+  pdf.text("https://cryptocash1.netlify.app", 25, 140);
   pdf.setFontSize(23);
   pdf.text("Use the QR Code to withdraw the value.", 25, 130);
   pdf.text(`Value:${denomination} ETH`, 25, 150);

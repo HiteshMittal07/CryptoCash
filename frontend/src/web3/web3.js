@@ -116,6 +116,7 @@ export async function switchNetwork(selectedValue) {
     .catch((error) => {
       if (error.code === 4902) {
         console.log("Chain ID is not added in MetaMask");
+        addNetwork(selectedValue);
       } else {
         console.error(error);
       }
