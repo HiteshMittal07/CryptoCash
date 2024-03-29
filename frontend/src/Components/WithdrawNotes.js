@@ -35,7 +35,7 @@ const QRReader = (props) => {
         ViewFinder={ViewFinder}
         constraints={{ facingMode }}
         onResult={async (result, error) => {
-          await getData(result, error);
+          await getData(result, error, props);
         }}
       />
     </div>
@@ -160,9 +160,10 @@ export const ViewFinder = () => (
     </svg>
   </>
 );
-async function getData(result, error) {
+async function getData(result, error, props) {
   if (!!result) {
     alert("Qr Scanned Successful");
+    props.handleClose();
     try {
       window.ethereum.on("chainChanged", async () => {
         await withdrawNote(

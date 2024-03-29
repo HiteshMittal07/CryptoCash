@@ -1,8 +1,9 @@
 import Home from "../Components/Home";
 import { Routes, Route } from "react-router-dom";
-import ScanNoteButton from "../Components/VerifyNotes";
+import ScanNoteButton from "../Components/WithdrawNotes";
 import Create from "../Components/CreateNote";
 import Info from "../Components/Info";
+import ScanNoteButton1 from "../Components/verifyNotes";
 const Router = () => {
   return (
     <Routes>
@@ -17,10 +18,45 @@ const Router = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                marginTop: "300px",
+                marginTop: "250px",
               }}
             >
-              <h2>Verify Your Note Here</h2>
+              <h2 className="fw-bolder">Scan Here</h2>
+              <p>
+                <span className="fw-bolder">Disclaimer! </span>:You can verify
+                whether the note you've been given has already been spent. If it
+                has, you can return it to the creator and request a newly issued
+                note, ensure this while taking note from the creator.
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <h3>Verify Note</h3>
+                <ScanNoteButton1 dialogTitle="Scan a CrptoCash Note"></ScanNoteButton1>
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/withdraw"
+        element={
+          <div className="container">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: "250px",
+              }}
+            >
+              <h2 className="fw-bolder">Withdraw Your Note Here</h2>
               <p>
                 This project, CryptoCash, revolutionizes cryptocurrency by
                 enabling the creation of offline crypto in the form of QR notes.
@@ -37,7 +73,7 @@ const Router = () => {
                   alignItems: "center",
                 }}
               >
-                <h3>Withdraw Note</h3>
+                <h3>Scan Here</h3>
                 <ScanNoteButton dialogTitle="Scan a CrptoCash Note"></ScanNoteButton>
               </div>
             </div>

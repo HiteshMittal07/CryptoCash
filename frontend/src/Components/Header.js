@@ -56,6 +56,11 @@ const Header = () => {
               </Link>
             </li>
             <li className="nav-item">
+              <Link to="/withdraw" className="nav-link">
+                Withdraw Note
+              </Link>
+            </li>
+            <li className="nav-item">
               <Link to="/info" className="nav-link">
                 Info
               </Link>
