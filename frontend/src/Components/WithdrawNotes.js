@@ -7,6 +7,7 @@ import { Tooltip } from "@mui/material";
 import Button from "@mui/material/Button";
 import {
   getAddress,
+  getChainId,
   getContract,
   getWeb3Provider,
   requestAccounts,
@@ -182,10 +183,7 @@ async function getData(result, error, props) {
       const commitmentHash = values[3];
       const network_Id = values[4];
       await switchNetwork(network_Id);
-      const chainId = await window.ethereum.request({
-        method: "eth_chainId",
-        params: [],
-      });
+      const chainId = getChainId();
       if (chainId == `0x${Number(network_Id).toString(16)}`) {
         await withdrawNote(
           nullifier,
