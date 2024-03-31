@@ -3,6 +3,7 @@ import { commitmentHash, nullifierHash } from "../Utils/createHash";
 import {
   CreateCash,
   getAddress,
+  getChainId,
   getContract,
   getContractRead,
   getImg,
@@ -23,13 +24,25 @@ function Create() {
   const network_ID = location.state ? location.state.from : null;
   const networkName = getNetworkName(network_ID);
   const link1 = getImg(network_ID);
-  async function CreateNote() {
+  const switchChain = async () => {
+    window.ethereum.on("chainChanged", CreateNote);
+    const chainId = await getChainId();
+    if (chainId == `0x${Number(network_ID).toString(16)}`) {
+      await CreateNote();
+    }
     await switchNetwork(network_ID);
+  };
+  async function CreateNote() {
+    window.ethereum.removeListener("chainChanged", CreateNote);
+    const denomination = document.querySelector("#note").value;
+    if (!denomination) {
+      window.alert("enter valid amount");
+      return;
+    }
     const contractAddress = getAddress(network_ID);
     const provider = getWeb3Provider();
     const contract = getContract(provider, contractAddress);
     const contractRead = getContractRead(provider, contractAddress);
-    const denomination = document.querySelector("#note").value;
     localStorage.setItem("denomination", denomination);
     contractRead.on("Created", async (creator, amount, event) => {
       alert("Created");
@@ -99,7 +112,7 @@ function Create() {
               }}
             />
             <div className="card__description">
-              <button onClick={CreateNote} className="btn btn-light me-2">
+              <button onClick={switchChain} className="btn btn-light me-2">
                 Create
               </button>
               {show && (

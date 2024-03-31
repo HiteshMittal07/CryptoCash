@@ -1,6 +1,6 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.css";
-import "./info.css";
+import "../Styles/info.css";
 function Info() {
   return (
     <div className="container mt-5 text-dark" style={{ textAlign: "center" }}>

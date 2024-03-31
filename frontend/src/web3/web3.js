@@ -10,6 +10,13 @@ export function getWeb3Provider() {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   return provider;
 }
+export async function getChainId() {
+  const chainId = await window.ethereum.request({
+    method: "eth_chainId",
+    params: [],
+  });
+  return chainId;
+}
 export async function requestAccounts(provider) {
   const accounts = await provider.send("eth_requestAccounts", []);
   return accounts[0];
