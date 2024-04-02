@@ -34,3 +34,4 @@ The goal of CryptoCash is to bridge the gap between traditional fiat currency an
 1. Clone the repository:
    ```bash
    git clone https://github.com/HiteshMittal07/CryptoCash.git
+   ```

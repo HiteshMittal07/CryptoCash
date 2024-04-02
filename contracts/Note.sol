@@ -8,7 +8,7 @@ contract Note is ReentrancyGuard{
     struct CommitmentStore {    
     bool used;
     bool verified;
-    address creator;
+    address owner;
     address recipient;
     uint256 createdDate;
     uint256 spentDate;
@@ -17,15 +17,13 @@ contract Note is ReentrancyGuard{
     Groth16Verifier instance1;
     mapping(bytes32=>CommitmentStore) commitments;
     mapping(bytes32=>bool)nullifierHashes;
-    address public owner;
     constructor(bytes32 _commitment,Groth16Verifier instance)payable{
 
         commitments[_commitment].used=true;
-        commitments[_commitment].creator=msg.sender;
+        commitments[_commitment].owner=msg.sender;
         commitments[_commitment].createdDate = block.timestamp;
         commitments[_commitment].denomination = msg.value;
         instance1=instance;
-        owner=msg.sender;
     }
      /**
      * @dev : function for verification of proof submitted by withdrawer whether it is correct or not
@@ -69,14 +67,20 @@ contract Note is ReentrancyGuard{
      * @param _nullifierHash : input parameter to check nullifierhash in mapping.
      */
 
-    function verify(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient) public {
+    function verify(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes32 new_commitment) public {
     bool success=instance1.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
     require(success,"Invalid");
     require(commitments[_commitment].used,"Unused Note");
     require(!nullifierHashes[_nullifierHash],"This note is already spent");
-    require(!isUser[msg.sender] || owner==msg.sender,"Invalid ownership change");
-    isUser[owner]=true;
-    owner=msg.sender;
+    require(!isUser[msg.sender] || commitments[_commitment].owner==msg.sender,"Invalid ownership change");
+    isUser[commitments[_commitment].owner]=true;
+    commitments[_commitment].used=false;
+    nullifierHashes[_nullifierHash]=true;
+    commitments[new_commitment].used=true;
+    commitments[new_commitment].owner=msg.sender;
+    commitments[new_commitment].createdDate = block.timestamp;
+    commitments[new_commitment].denomination = commitments[_commitment].denomination;
+    
   }
 
 }
