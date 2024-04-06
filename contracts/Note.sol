@@ -2,6 +2,7 @@
 pragma solidity ^0.8.6;
 import "./verifier.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 contract Note is ReentrancyGuard{
     Groth16Verifier instance;
     event verified(bool status);
