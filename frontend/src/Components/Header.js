@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getWeb3Provider, requestAccounts } from "../web3/web3";
+import logo from "../Img/image.png";
 const Header = () => {
   const [account, setAccount] = useState(null);
   const truncateWalletAddress = async (address, length = 4) => {
@@ -36,7 +37,14 @@ const Header = () => {
     <nav className="navbar navbar-expand-lg sticky-top navbar-dark text-bg-dark bg-transparent shadow">
       <div className="container">
         <Link className="navbar-brand" to="/" style={{ fontSize: "25px" }}>
-          CryptoCash
+          <img
+            src={logo}
+            width="30"
+            height="30"
+            className="d-inline-block align-top"
+            alt="Logo"
+          />
+          <span className="ms-1">CryptoCash</span>
         </Link>
         <button
           className="navbar-toggler"

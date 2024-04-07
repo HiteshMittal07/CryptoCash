@@ -2,7 +2,8 @@ import { ethers, providers } from "ethers";
 import abi from "../ABI/Main.json";
 import { Proofa, Proofb, Proofc } from "../Utils/packToSolidityProof";
 export const contractAddress = {
-  Sepolia_testnet: "0xcb9c202880AC40cb4846CA24e07d97D01202abf8",
+  // Sepolia_testnet: "0xcb9c202880AC40cb4846CA24e07d97D01202abf8",
+  Sepolia_testnet: "0x4a27864c18cA385d8a3B6e5dE1fE0fed1e9225B8",
   arbitrum_sepolia: "0xe591A89874b21e4F462Bd2DdbcbF27384E872ea5",
   scroll_Sepolia: "0xB70d7E5a736D8EEae7148928cB8b6f233bb6D467",
 };
