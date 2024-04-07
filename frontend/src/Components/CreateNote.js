@@ -59,6 +59,7 @@ function Create() {
       parseInt(secret)
     );
     const commitment = toHex(commitment_Hash);
+    console.log(commitment);
     const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_ID}`;
     console.log(nullifier);
     const transaction = await CreateCash(contract, commitment, denomination);
