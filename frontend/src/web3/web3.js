@@ -34,9 +34,13 @@ export const getContractRead = (provider, address) => {
 };
 
 export async function CreateCash(contract, commitment, denomination) {
-  return await contract.createNote(commitment, denomination, {
-    value: ethers.utils.parseEther(denomination),
-  });
+  return await contract.createNote(
+    commitment,
+    ethers.utils.parseEther(denomination),
+    {
+      value: ethers.utils.parseEther(denomination),
+    }
+  );
 }
 
 export const getAddress = (Id) => {
@@ -141,6 +145,25 @@ export async function verify(
   const proofB = Proofb(proof);
   const proofC = Proofc(proof);
   return await contract.verify(
+    proofA,
+    proofB,
+    proofC,
+    nullifierHash,
+    commitment,
+    recipient
+  );
+}
+export async function claim(
+  contract,
+  proof,
+  nullifierHash,
+  commitment,
+  recipient
+) {
+  const proofA = Proofa(proof);
+  const proofB = Proofb(proof);
+  const proofC = Proofc(proof);
+  return await contract.claim(
     proofA,
     proofB,
     proofC,

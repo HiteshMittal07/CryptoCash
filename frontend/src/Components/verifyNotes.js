@@ -7,10 +7,13 @@ import { Tooltip } from "@mui/material";
 import Button from "@mui/material/Button";
 import {
   getAddress,
-  getContract,
+  getChainId,
+  getContractRead,
   getWeb3Provider,
+  requestAccounts,
   switchNetwork,
   toHex,
+  verify,
 } from "../web3/web3";
 import { useState } from "react";
 
@@ -180,10 +183,7 @@ async function getData(result, error, props) {
       const commitmentHash = values[3];
       const network_Id = values[4];
       await switchNetwork(network_Id);
-      const chainId = await window.ethereum.request({
-        method: "eth_chainId",
-        params: [],
-      });
+      const chainId = await getChainId();
       if (chainId == `0x${Number(network_Id).toString(16)}`) {
         await verifyNote(
           nullifier,
@@ -217,17 +217,30 @@ async function verifyNote(
     });
     const contractAddress = getAddress(network_Id);
     const provider = getWeb3Provider();
-    const contract = getContract(provider, contractAddress);
+    const contract = getContractRead(provider, contractAddress);
+    const address = await requestAccounts(provider);
+    const Proof = await generateProof(
+      nullifier,
+      nullifierHash,
+      address,
+      secret,
+      commitmentHash
+    );
     try {
-      const transaction = await contract.isSpent(toHex(nullifierHash));
+      const transaction = await verify(
+        contract,
+        Proof,
+        toHex(nullifierHash),
+        toHex(commitmentHash),
+        address
+      );
       if (transaction) {
-        window.alert("This note has already been spent");
-      } else {
         window.alert("This note is not spent");
+      } else {
+        window.alert("This note has already been spent");
       }
     } catch (error) {
-      console.log(error);
-      alert(error);
+      alert(error.reason);
     }
   } catch (error) {
     console.log(error);

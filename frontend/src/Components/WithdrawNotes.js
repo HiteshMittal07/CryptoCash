@@ -6,6 +6,7 @@ import { isMobile } from "react-device-detect";
 import { Tooltip } from "@mui/material";
 import Button from "@mui/material/Button";
 import {
+  claim,
   getAddress,
   getChainId,
   getContract,
@@ -13,7 +14,6 @@ import {
   requestAccounts,
   switchNetwork,
   toHex,
-  verify,
 } from "../web3/web3";
 import { useState } from "react";
 
@@ -183,7 +183,7 @@ async function getData(result, error, props) {
       const commitmentHash = values[3];
       const network_Id = values[4];
       await switchNetwork(network_Id);
-      const chainId = getChainId();
+      const chainId = await getChainId();
       if (chainId == `0x${Number(network_Id).toString(16)}`) {
         await withdrawNote(
           nullifier,
@@ -215,6 +215,7 @@ async function withdrawNote(
         network_Id
       );
     });
+    console.log("hi there");
     const contractAddress = getAddress(network_Id);
     const provider = getWeb3Provider();
     const contract = getContract(provider, contractAddress);
@@ -227,7 +228,7 @@ async function withdrawNote(
       commitmentHash
     );
     try {
-      const transaction = await verify(
+      const transaction = await claim(
         contract,
         Proof,
         toHex(nullifierHash),
