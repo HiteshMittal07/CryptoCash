@@ -34,7 +34,7 @@ export const getContractRead = (provider, address) => {
 };
 
 export async function CreateCash(contract, commitment, denomination) {
-  return await contract.createNote(commitment, {
+  return await contract.createNote(commitment, denomination, {
     value: ethers.utils.parseEther(denomination),
   });
 }
