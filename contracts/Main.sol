@@ -42,11 +42,11 @@ struct CommitmentStore {
     }
 
       /**
-     * @dev : function for verification of proof submitted by withdrawer whether it is correct or not
+     * @dev : function for withdrawing the funds .
      * @param _pA : parameters of proof
      * @param _pB : paramters of proof
      * @param _pC : private parameters of proof
-     * @param _nullifierHash : hash of nullifier
+     * @param _nullifierHash : hash of nullifierhash of nullifier
      * @param _commitment : hash of commitment (nullifier,secret)
      * @param _recipient : address to which the withdrawn funds should transfer
      */
@@ -55,39 +55,41 @@ struct CommitmentStore {
       require(commitments[_commitment].used==true,"Invalid commitment");
       bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
       require(success,"Invalid");
-      withdraw(_recipient,_nullifierHash);
+      (bool _success, )=payable(_recipient).call{value: address(this).balance}("");
+       require(_success,"failed transaction");
+       nullifierHashes[_nullifierHash]=true;
     }
 
     /**
-     * @dev : An internal function to be called when there is verification of the proof, this is for the transfer of funds 
-     * @param _recipient : 
-     */
-
-    function withdraw(address _recipient,bytes32 _nullifierHash)internal{
-        (bool success, )=payable(_recipient).call{value: address(this).balance}("");
-        require(success,"failed transaction");
-        nullifierHashes[_nullifierHash]=true;
-    }
-
-    /**
-     * @dev : to check whether the notes is spend already or not
-     * @param _nullifierHash : input parameter to check nullifierhash in mapping.
+     * @dev : to check whether the notes is valid , spent or not.
+     * @return : it returns bool (true or false).
      */
 
     function verify(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient)view public returns(bool) {
     require(!nullifierHashes[_nullifierHash],"The note is already spent");
     require(commitments[_commitment].used==true,"invalid commitment");  
     bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
-    require(success,"Invalid");    
+    require(success,"Invalid Proof");    
     return success;
   }
 
-  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes32 new_commitment)public {
+    /**
+     * @dev : funnction for changing the owner of the cash, so that no other person can claim the cash.
+     * @param _pA : parameter of proof
+     * @param _pB : parameter of proof
+     * @param _pC : parameter of proof
+     * @param _nullifierHash : hash of nullifier
+     * @param _commitment : hash of commitment (nullifier,secret)
+     * @param _recipient : address to which the withdrawn funds should transfer
+     * @param new_commitment : new commitment to which the cash will be linked.
+     */
+
+  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes32 new_commitment)public nonReentrant{
     require(!nullifierHashes[_nullifierHash],"The note is already spent");
     require(commitments[_commitment].used==true,"invalid commitment");  
     bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
     require(success,"Invalid");    
     createNote(new_commitment, commitments[_commitment].denomination);
-    delete commitments[_commitment];
+    delete commitments[_commitment]; //deleting the info about old commitment
   }
 }
