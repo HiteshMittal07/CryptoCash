@@ -13,6 +13,17 @@ The goal of CryptoCash is to bridge the gap between traditional fiat currency an
 - **Privacy:** Zero-knowledge proof technology ensures that note secrets remain private.
 - **Multi-Network Support:** Operates on three testnets: Eth Sepolia, Scroll Sepolia, and Arbitrum Sepolia.
 
+### New Features
+
+ -**Note Ownership Verification**: 
+ - Solving the problem of creator using the note after sharing.
+  - Recipients must verify notes on the website after receiving them.
+  - This process changes ownership and checks note validity and spend status.
+  - It links the note with a new commitment and deletes the previous commitment.
+  - Ensures that only the current note holder can claim it at any time.
+  - Prevents sharing the same note with multiple people.
+ 
+
 ## How to Use
 
 1. **Select Network**: Choose the desired network (testnet) for creating notes.
