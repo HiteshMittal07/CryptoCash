@@ -7,8 +7,8 @@ import { CreateQR } from "../Utils/createQR";
 import { downloadQRCodePDF } from "../Utils/downloadQR";
 export const contractAddress = {
   Sepolia_testnet: "0xD1b0AD45B16BE5201Bc6F057D0ed6d8882dEaE8F",
-  arbitrum_sepolia: "0xe591A89874b21e4F462Bd2DdbcbF27384E872ea5",
-  scroll_Sepolia: "0xB70d7E5a736D8EEae7148928cB8b6f233bb6D467",
+  arbitrum_sepolia: "0xa1A78fE74c89F1e7BBA24Fb0AF443EBa725bCe72",
+  scroll_Sepolia: "0xd83D72db394Bd5A56461Aa86EcF116E7b4BDAe19",
 };
 export function getWeb3Provider() {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -215,7 +215,7 @@ export function createNote(network_Id, contractAddress) {
     alert("Created");
     const qrDataURL = await CreateQR(noteString);
     const networkName = getNetworkName(network_Id);
-    const denomination = ethers.utils.formatEther(amount);
+    const denomination = ethers.utils.formatUnits(amount, "ether");
     downloadQRCodePDF(qrDataURL, denomination, networkName);
     event.removeListener();
   });

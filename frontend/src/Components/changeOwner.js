@@ -185,7 +185,6 @@ async function getData(result, error, props) {
       });
       const values = result?.text.split(",");
       const nullifier = parseInt(values[0]);
-      console.log(nullifier);
       const secret = parseInt(values[1]);
       const nullifierHash = values[2];
       const commitmentHash = values[3];
