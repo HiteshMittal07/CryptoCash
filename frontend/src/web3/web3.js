@@ -6,8 +6,7 @@ import { commitmentHash, nullifierHash } from "../Utils/createHash";
 import { CreateQR } from "../Utils/createQR";
 import { downloadQRCodePDF } from "../Utils/downloadQR";
 export const contractAddress = {
-  // Sepolia_testnet: "0xcb9c202880AC40cb4846CA24e07d97D01202abf8",
-  Sepolia_testnet: "0x4a27864c18cA385d8a3B6e5dE1fE0fed1e9225B8",
+  Sepolia_testnet: "0xD1b0AD45B16BE5201Bc6F057D0ed6d8882dEaE8F",
   arbitrum_sepolia: "0xe591A89874b21e4F462Bd2DdbcbF27384E872ea5",
   scroll_Sepolia: "0xB70d7E5a736D8EEae7148928cB8b6f233bb6D467",
 };
@@ -200,7 +199,7 @@ export async function changeOwner(
   );
 }
 
-export function createNote(network_Id,contractAddress) {
+export function createNote(network_Id, contractAddress) {
   const provider = getWeb3Provider();
   const new_nullifier = random();
   const new_secret = random();

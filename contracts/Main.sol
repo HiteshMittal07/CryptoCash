@@ -55,7 +55,7 @@ struct CommitmentStore {
       require(commitments[_commitment].used==true,"Invalid commitment");
       bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
       require(success,"Invalid");
-      (bool _success, )=payable(_recipient).call{value: address(this).balance}("");
+      (bool _success, )=payable(_recipient).call{value: commitments[_commitment].denomination}("");
        require(_success,"failed transaction");
        nullifierHashes[_nullifierHash]=true;
     }
