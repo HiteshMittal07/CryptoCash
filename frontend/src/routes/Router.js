@@ -4,6 +4,7 @@ import ScanNoteButton from "../Components/WithdrawNotes";
 import Create from "../Components/CreateNote";
 import Info from "../Components/Info";
 import ScanNoteButton1 from "../Components/verifyNotes";
+import ScanNoteButton2 from "../Components/changeOwner";
 const Router = () => {
   return (
     <Routes>
@@ -36,8 +37,15 @@ const Router = () => {
                   alignItems: "center",
                 }}
               >
-                <h3>Verify Note</h3>
-                <ScanNoteButton1 dialogTitle="Scan a CrptoCash Note"></ScanNoteButton1>
+                <h3>Verify Note / Become Owner</h3>
+                <div className="row">
+                  <div className="col-6">
+                    <ScanNoteButton1 dialogTitle="Scan for verifying note"></ScanNoteButton1>
+                  </div>
+                  <div className="col-6">
+                    <ScanNoteButton2 dialogTitle="Scan for changing ownership"></ScanNoteButton2>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -27,8 +27,12 @@ const Header = () => {
   useEffect(() => {
     const connect = async () => {
       const provider = getWeb3Provider();
-      const address = await requestAccounts(provider);
-      truncateWalletAddress(address);
+      try {
+        const address = await requestAccounts(provider);
+        truncateWalletAddress(address);
+      } catch (error) {
+        console.log(error);
+      }
     };
     connect();
   }, []);

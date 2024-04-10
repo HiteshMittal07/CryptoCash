@@ -4,7 +4,10 @@ import { Link } from "react-router-dom";
 const Home = () => {
   return (
     <div className="card1">
-      <h1 className="text-light mb-3 fw-bolder" style={{ fontSize: "60px" }}>
+      <h1
+        className="text-light mb-3 fw-bolder homeHead"
+        style={{ fontSize: "60px" }}
+      >
         TO CREATE A NOTE
       </h1>
       <h3 className="fw-bold">SELECT NETWORK</h3>

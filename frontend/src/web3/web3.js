@@ -1,6 +1,10 @@
 import { ethers, providers } from "ethers";
 import abi from "../ABI/Main.json";
 import { Proofa, Proofb, Proofc } from "../Utils/packToSolidityProof";
+import random from "../Utils/random";
+import { commitmentHash, nullifierHash } from "../Utils/createHash";
+import { CreateQR } from "../Utils/createQR";
+import { downloadQRCodePDF } from "../Utils/downloadQR";
 export const contractAddress = {
   // Sepolia_testnet: "0xcb9c202880AC40cb4846CA24e07d97D01202abf8",
   Sepolia_testnet: "0x4a27864c18cA385d8a3B6e5dE1fE0fed1e9225B8",
@@ -173,7 +177,51 @@ export async function claim(
     { gasLimit: 3000000 }
   );
 }
+export async function changeOwner(
+  contract,
+  proof,
+  nullifierHash,
+  commitment,
+  recipient,
+  new_commitment
+) {
+  const proofA = Proofa(proof);
+  const proofB = Proofb(proof);
+  const proofC = Proofc(proof);
+  return await contract.changeOwner(
+    proofA,
+    proofB,
+    proofC,
+    nullifierHash,
+    commitment,
+    recipient,
+    new_commitment,
+    { gasLimit: 3000000 }
+  );
+}
 
+export function createNote(network_Id,contractAddress) {
+  const provider = getWeb3Provider();
+  const new_nullifier = random();
+  const new_secret = random();
+  const new_nullifier_Hash = nullifierHash(parseInt(new_nullifier));
+  const new_commitment_Hash = commitmentHash(
+    parseInt(new_nullifier),
+    parseInt(new_secret)
+  );
+  const new_commitment = toHex(new_commitment_Hash);
+  const noteString = `${new_nullifier},${new_secret},${new_nullifier_Hash},${new_commitment_Hash},${network_Id}`;
+  const contractRead = getContractRead(provider, contractAddress);
+  contractRead.on("Created", async (creator, amount, event) => {
+    alert("Created");
+    const qrDataURL = await CreateQR(noteString);
+    const networkName = getNetworkName(network_Id);
+    const denomination = ethers.utils.formatEther(amount);
+    downloadQRCodePDF(qrDataURL, denomination, networkName);
+    event.removeListener();
+  });
+  return new_commitment;
+}
 export function toHex(number) {
   return ethers.BigNumber.from(number)._hex;
 }

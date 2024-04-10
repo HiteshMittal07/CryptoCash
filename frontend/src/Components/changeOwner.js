@@ -6,16 +6,24 @@ import { isMobile } from "react-device-detect";
 import { Tooltip } from "@mui/material";
 import Button from "@mui/material/Button";
 import {
+  changeOwner,
   claim,
+  createNote,
   getAddress,
   getChainId,
   getContract,
+  getContractRead,
+  getNetworkName,
   getWeb3Provider,
   requestAccounts,
   switchNetwork,
   toHex,
 } from "../web3/web3";
 import { useState } from "react";
+import random from "../Utils/random";
+import { CreateQR } from "../Utils/createQR";
+import { downloadQRCodePDF } from "../Utils/downloadQR";
+import { ethers } from "ethers";
 
 /**
  * @typedef {Object} QRReaderProps
@@ -86,7 +94,7 @@ function ScanNoteDialog(props) {
 /**
  * @param {ScanNoteButtonProps} props
  */
-export default function ScanNoteButton(props) {
+export default function ScanNoteButton2(props) {
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -167,7 +175,7 @@ async function getData(result, error, props) {
     props.handleClose();
     try {
       window.ethereum.on("chainChanged", async () => {
-        await withdrawNote(
+        await changeOwnership(
           nullifier,
           secret,
           nullifierHash,
@@ -185,7 +193,7 @@ async function getData(result, error, props) {
       await switchNetwork(network_Id);
       const chainId = await getChainId();
       if (chainId == `0x${Number(network_Id).toString(16)}`) {
-        await withdrawNote(
+        await changeOwnership(
           nullifier,
           secret,
           nullifierHash,
@@ -198,7 +206,7 @@ async function getData(result, error, props) {
     }
   }
 }
-async function withdrawNote(
+async function changeOwnership(
   nullifier,
   secret,
   nullifierHash,
@@ -207,7 +215,7 @@ async function withdrawNote(
 ) {
   try {
     window.ethereum.removeListener("chainChanged", async () => {
-      await withdrawNote(
+      await changeOwnership(
         nullifier,
         secret,
         nullifierHash,
@@ -226,16 +234,18 @@ async function withdrawNote(
       secret,
       commitmentHash
     );
+    const new_commitment = createNote(network_Id,contractAddress);
     try {
-      const transaction = await claim(
+      const transaction = await changeOwner(
         contract,
         Proof,
         toHex(nullifierHash),
         toHex(commitmentHash),
-        address
+        address,
+        new_commitment
       );
       await transaction.wait();
-      window.alert("Withdraw Successful");
+      window.alert("ownership changed successful");
     } catch (error) {
       console.log(error);
       alert(error.reason);

@@ -86,3 +86,9 @@
   text-decoration: none;
   cursor: pointer;
 }
+@media (max-width: 767px) {
+  /* Styles for phones */
+  .homeHead {
+    margin-left: 30px;
+  }
+}
