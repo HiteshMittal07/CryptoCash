@@ -81,13 +81,12 @@ struct CommitmentStore {
      * @param _nullifierHash : hash of nullifier
      * @param _commitment : hash of commitment (nullifier,secret)
      * @param _recipient : address to which the withdrawn funds should transfer
-     * @param sender : the person who is giving the cash to someone.
+     * @param signature : it help to validate whether the cash is given by the current owner or not.
      */
 
-  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,address sender,bytes memory signature)public nonReentrant{
-    bytes32 message = prefixed(keccak256(abi.encodePacked(sender)));
+  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes memory signature)public nonReentrant{
+    bytes32 message = prefixed(keccak256(abi.encodePacked(_commitment)));
     require(recoverSigner(message, signature)==commitments[_commitment].owner,"You don't have correct note");
-    require(sender==commitments[_commitment].owner,"This sender don't own this note");
     require(!nullifierHashes[_nullifierHash],"The note is already spent");
     require(commitments[_commitment].used==true,"invalid commitment");  
     bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
