@@ -72,7 +72,6 @@ function Create() {
     };
     addNetwork();
   }, []);
-
   function download() {
     const networkName = getNetworkName(network_ID);
     const denomination = localStorage.getItem("denomination");
