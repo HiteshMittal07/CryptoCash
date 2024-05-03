@@ -199,28 +199,22 @@ export async function changeOwner(
   );
 }
 
-export function createNote(network_Id, contractAddress) {
-  const provider = getWeb3Provider();
-  const new_nullifier = random();
-  const new_secret = random();
-  const new_nullifier_Hash = nullifierHash(parseInt(new_nullifier));
-  const new_commitment_Hash = commitmentHash(
-    parseInt(new_nullifier),
-    parseInt(new_secret)
-  );
-  const new_commitment = toHex(new_commitment_Hash);
-  const noteString = `${new_nullifier},${new_secret},${new_nullifier_Hash},${new_commitment_Hash},${network_Id}`;
-  const contractRead = getContractRead(provider, contractAddress);
-  contractRead.on("Created", async (creator, amount, event) => {
-    alert("Created");
-    const qrDataURL = await CreateQR(noteString);
-    const networkName = getNetworkName(network_Id);
-    const denomination = ethers.utils.formatUnits(amount, "ether");
-    downloadQRCodePDF(qrDataURL, denomination, networkName);
-    event.removeListener();
-  });
-  return new_commitment;
+export async function createNote(
+  network_Id,
+  nullifier,
+  secret,
+  nullifier_Hash,
+  commitment_Hash,
+  amount,
+  signature
+) {
+  const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_Id},${signature}`;
+  const qrDataURL = await CreateQR(noteString);
+  const networkName = getNetworkName(network_Id);
+  const denomination = ethers.utils.formatUnits(amount, "ether");
+  downloadQRCodePDF(qrDataURL, denomination, networkName);
 }
+
 export function toHex(number) {
   return ethers.BigNumber.from(number)._hex;
 }
