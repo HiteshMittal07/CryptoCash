@@ -9,6 +9,7 @@ import {
   getImg,
   getNetworkName,
   getWeb3Provider,
+  signMessage,
   switchNetwork,
   toHex,
 } from "../web3/web3";
@@ -24,6 +25,7 @@ function Create() {
   const network_ID = location.state ? location.state.from : null;
   const networkName = getNetworkName(network_ID);
   const link1 = getImg(network_ID);
+
   const switchChain = async () => {
     window.ethereum.on("chainChanged", CreateNote);
     const chainId = await getChainId();
@@ -59,8 +61,8 @@ function Create() {
       parseInt(secret)
     );
     const commitment = toHex(commitment_Hash);
-    console.log(commitment);
-    const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_ID}`;
+    const signature = await signMessage(commitment);
+    const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_ID},${signature}`;
     console.log(nullifier);
     const transaction = await CreateCash(contract, commitment, denomination);
     await transaction.wait();
