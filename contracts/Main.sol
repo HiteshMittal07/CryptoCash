@@ -81,15 +81,60 @@ struct CommitmentStore {
      * @param _nullifierHash : hash of nullifier
      * @param _commitment : hash of commitment (nullifier,secret)
      * @param _recipient : address to which the withdrawn funds should transfer
-     * @param new_commitment : new commitment to which the cash will be linked.
+     * @param sender : the person who is giving the cash to someone.
      */
 
-  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes32 new_commitment)public nonReentrant{
+  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,address sender,bytes memory signature)public nonReentrant{
+    bytes32 message = prefixed(keccak256(abi.encodePacked(sender)));
+    require(recoverSigner(message, signature)==commitments[_commitment].owner,"You don't have correct note");
+    require(sender==commitments[_commitment].owner,"This sender don't own this note");
     require(!nullifierHashes[_nullifierHash],"The note is already spent");
     require(commitments[_commitment].used==true,"invalid commitment");  
     bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
     require(success,"Invalid");    
-    createNote(new_commitment, commitments[_commitment].denomination);
-    delete commitments[_commitment]; //deleting the info about old commitment
+    commitments[_commitment].owner=_recipient;
   }
+
+  function claimPayment(bytes memory signature,address sender)
+        external pure returns(address)
+    {
+        // this recreates the message that was signed on the client
+        bytes32 message = prefixed(keccak256(abi.encodePacked(sender)));
+        return recoverSigner(message, signature);
+    }
+
+
+    /// signature methods.
+    function splitSignature(bytes memory sig)
+        internal
+        pure
+        returns (uint8 v, bytes32 r, bytes32 s)
+    {
+        require(sig.length == 65);
+
+        assembly {
+            // first 32 bytes, after the length prefix.
+            r := mload(add(sig, 32))
+            // second 32 bytes.
+            s := mload(add(sig, 64))
+            // final byte (first byte of the next 32 bytes).
+            v := byte(0, mload(add(sig, 96)))
+        }
+
+        return (v, r, s);
+    }
+
+    function recoverSigner(bytes32 message, bytes memory sig)
+        internal
+        pure
+        returns (address)
+    {
+        (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
+        return ecrecover(message, v, r, s);
+    }
+
+    /// builds a prefixed hash to mimic the behavior of eth_sign.
+    function prefixed(bytes32 hash) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
 }
