@@ -224,3 +224,11 @@ export function createNote(network_Id, contractAddress) {
 export function toHex(number) {
   return ethers.BigNumber.from(number)._hex;
 }
+export const signMessage = async (commitment) => {
+  const ethereum = window.ethereum;
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const signer = provider.getSigner();
+  const hash = ethers.utils.solidityKeccak256(["bytes32"], [commitment]);
+  const signature = await signer.signMessage(ethers.utils.arrayify(hash));
+  return signature;
+};
