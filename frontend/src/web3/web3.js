@@ -182,7 +182,7 @@ export async function changeOwner(
   nullifierHash,
   commitment,
   recipient,
-  new_commitment
+  signature
 ) {
   const proofA = Proofa(proof);
   const proofB = Proofb(proof);
@@ -194,7 +194,7 @@ export async function changeOwner(
     nullifierHash,
     commitment,
     recipient,
-    new_commitment,
+    signature,
     { gasLimit: 3000000 }
   );
 }
