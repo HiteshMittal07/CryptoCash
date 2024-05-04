@@ -51,9 +51,8 @@ struct CommitmentStore {
      * @param _recipient : address to which the withdrawn funds should transfer
      */
     function claim(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient)public nonReentrant{
-      require(!nullifierHashes[_nullifierHash],"The note is already spent");
-      require(commitments[_commitment].used==true,"Invalid commitment");
-      bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
+      require(msg.sender==commitments[_commitment].owner,"you can't claim this note");  
+      bool success=verify(_pA, _pB, _pC, _nullifierHash, _commitment, _recipient);
       require(success,"Invalid");
       (bool _success, )=payable(_recipient).call{value: commitments[_commitment].denomination}("");
        require(_success,"failed transaction");
@@ -87,21 +86,10 @@ struct CommitmentStore {
   function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes memory signature)public nonReentrant{
     bytes32 message = prefixed(keccak256(abi.encodePacked(_commitment)));
     require(recoverSigner(message, signature)==commitments[_commitment].owner,"You don't have correct note");
-    require(!nullifierHashes[_nullifierHash],"The note is already spent");
-    require(commitments[_commitment].used==true,"invalid commitment");  
-    bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
-    require(success,"Invalid");    
+    bool success=verify(_pA, _pB, _pC, _nullifierHash, _commitment, _recipient);
+    require(success,"Invalid");
     commitments[_commitment].owner=_recipient;
   }
-
-  function claimPayment(bytes memory signature,address sender)
-        external pure returns(address)
-    {
-        // this recreates the message that was signed on the client
-        bytes32 message = prefixed(keccak256(abi.encodePacked(sender)));
-        return recoverSigner(message, signature);
-    }
-
 
     /// signature methods.
     function splitSignature(bytes memory sig)
