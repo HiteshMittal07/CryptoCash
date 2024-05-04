@@ -47,9 +47,11 @@ function Create() {
     const contractRead = getContractRead(provider, contractAddress);
     localStorage.setItem("denomination", denomination);
     contractRead.on("Created", async (creator, amount, event) => {
-      alert("Created");
+      const signature = await signMessage(commitment);
+      const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${amount},${network_ID},${signature}`;
       const qrDataURL = await CreateQR(noteString);
       setNoteDetails(qrDataURL);
+      alert("Created");
       setShow(true);
       event.removeListener();
     });
@@ -61,9 +63,6 @@ function Create() {
       parseInt(secret)
     );
     const commitment = toHex(commitment_Hash);
-    const signature = await signMessage(commitment);
-    const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_ID},${signature}`;
-    console.log(nullifier);
     const transaction = await CreateCash(contract, commitment, denomination);
     await transaction.wait();
   }
