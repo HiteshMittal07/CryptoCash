@@ -208,7 +208,7 @@ export async function createNote(
   amount,
   signature
 ) {
-  const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${network_Id},${signature}`;
+  const noteString = `${nullifier},${secret},${nullifier_Hash},${commitment_Hash},${amount},${network_Id},${signature}`;
   const qrDataURL = await CreateQR(noteString);
   const networkName = getNetworkName(network_Id);
   const denomination = ethers.utils.formatUnits(amount, "ether");
