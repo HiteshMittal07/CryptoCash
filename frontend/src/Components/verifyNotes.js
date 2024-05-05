@@ -181,7 +181,7 @@ async function getData(result, error, props) {
       const secret = parseInt(values[1]);
       const nullifierHash = values[2];
       const commitmentHash = values[3];
-      const network_Id = values[4];
+      const network_Id = values[5];
       await switchNetwork(network_Id);
       const chainId = await getChainId();
       if (chainId == `0x${Number(network_Id).toString(16)}`) {
