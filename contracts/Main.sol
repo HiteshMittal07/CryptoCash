@@ -85,7 +85,7 @@ struct CommitmentStore {
 
   function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes memory signature)public nonReentrant{
     bytes32 message = prefixed(keccak256(abi.encodePacked(_commitment)));
-    require(recoverSigner(message, signature)==commitments[_commitment].owner,"You don't have correct note");
+    require(recoverSigner(message, signature)==commitments[_commitment].owner,"You don't have correct note"); // it repressents that it requires owner signature for changing owner.
     bool success=verify(_pA, _pB, _pC, _nullifierHash, _commitment, _recipient);
     require(success,"Invalid");
     commitments[_commitment].owner=_recipient;

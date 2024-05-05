@@ -16,6 +16,7 @@ import {
   getNetworkName,
   getWeb3Provider,
   requestAccounts,
+  signMessage,
   switchNetwork,
   toHex,
 } from "../web3/web3";
@@ -180,7 +181,9 @@ async function getData(result, error, props) {
           secret,
           nullifierHash,
           commitmentHash,
-          network_Id
+          amount,
+          network_Id,
+          signature
         );
       });
       const values = result?.text.split(",");
@@ -188,7 +191,9 @@ async function getData(result, error, props) {
       const secret = parseInt(values[1]);
       const nullifierHash = values[2];
       const commitmentHash = values[3];
-      const network_Id = values[4];
+      const amount = values[4];
+      const network_Id = values[5];
+      const signature = values[6];
       await switchNetwork(network_Id);
       const chainId = await getChainId();
       if (chainId == `0x${Number(network_Id).toString(16)}`) {
@@ -197,7 +202,9 @@ async function getData(result, error, props) {
           secret,
           nullifierHash,
           commitmentHash,
-          network_Id
+          amount,
+          network_Id,
+          signature
         );
       }
     } catch (error) {
@@ -210,7 +217,9 @@ async function changeOwnership(
   secret,
   nullifierHash,
   commitmentHash,
-  network_Id
+  amount,
+  network_Id,
+  signature
 ) {
   try {
     window.ethereum.removeListener("chainChanged", async () => {
@@ -219,7 +228,9 @@ async function changeOwnership(
         secret,
         nullifierHash,
         commitmentHash,
-        network_Id
+        amount,
+        network_Id,
+        signature
       );
     });
     const contractAddress = getAddress(network_Id);
@@ -233,7 +244,6 @@ async function changeOwnership(
       secret,
       commitmentHash
     );
-    const new_commitment = createNote(network_Id,contractAddress);
     try {
       const transaction = await changeOwner(
         contract,
@@ -241,10 +251,20 @@ async function changeOwnership(
         toHex(nullifierHash),
         toHex(commitmentHash),
         address,
-        new_commitment
+        signature
       );
       await transaction.wait();
       window.alert("ownership changed successful");
+      const new_signature = await signMessage(toHex(commitmentHash));
+      await createNote(
+        network_Id,
+        nullifier,
+        secret,
+        nullifierHash,
+        commitmentHash,
+        amount,
+        new_signature
+      );
     } catch (error) {
       console.log(error);
       alert(error.reason);
