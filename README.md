@@ -23,7 +23,13 @@ The goal of CryptoCash is to bridge the gap between traditional fiat currency an
   - Ensures that only the current note holder can claim it at any time.
   - Prevents sharing the same note with multiple people.
  
-
+### New Features - Latest Update
+- Providing Optimization for previour problem solution
+- Now no need of creation of new_commitment on every sharing
+- Creator have to sign some message and add in the note
+- Which will be verified on the chain whenever there is sharing the reciver , have to opt for change owner in order to become owner
+- Then there will be check that whether the signature match with current owner of note or not, if yes then owner will be changed and new owner have to sign some message and add to new note and can keep it.
+  
 ## How to Use
 
 1. **Select Network**: Choose the desired network (testnet) for creating notes.
