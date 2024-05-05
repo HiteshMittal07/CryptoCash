@@ -7,8 +7,8 @@ import { CreateQR } from "../Utils/createQR";
 import { downloadQRCodePDF } from "../Utils/downloadQR";
 export const contractAddress = {
   Sepolia_testnet: "0x852B82260F924053F20c464a895E219CC45Adba1",
-  arbitrum_sepolia: "0xa1A78fE74c89F1e7BBA24Fb0AF443EBa725bCe72",
-  scroll_Sepolia: "0xd83D72db394Bd5A56461Aa86EcF116E7b4BDAe19",
+  arbitrum_sepolia: "0xd83D72db394Bd5A56461Aa86EcF116E7b4BDAe19",
+  scroll_Sepolia: "0x41d9F20e9950A6Db853b9ec68965f7702232443c",
 };
 export function getWeb3Provider() {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
