@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 import "./verifier.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract Main is ReentrancyGuard{
-struct CommitmentStore {    
-    bool used;
-    bool verified;
-    address owner;
-    address recipient;
-    uint256 createdDate;
-    uint256 spentDate;
-    uint256 denomination;
+contract Main is ReentrancyGuard {
+    error CommitmentAlreadyUsed();
+    error InvalidAmount();
+    error InvalidClaimer();
+    error InvalidProof();
+    error TransferFailed();
+    error NoteAlreadySpent();
+    error InvalidCommitment();
+    struct CommitmentStore {
+        bool used;
+        bool verified;
+        address owner;
+        address recipient;
+        uint256 createdDate;
+        uint256 spentDate;
+        uint256 denomination;
     }
     // address payable public owner;
     // payable constructor can recieve ethers
@@ -20,10 +27,11 @@ struct CommitmentStore {
     mapping(bytes32 => CommitmentStore) public commitments; // stores notes details corresponding to commitment hash.
     address payable public _owner;
     Groth16Verifier instance; //stores the instance of deployed verifier contract on chain.
-    constructor(){ 
-        Groth16Verifier _instance=new Groth16Verifier(); // deployement of verifier to get instance for further use.
-        instance=_instance;
-        _owner=payable(msg.sender); //owner is contract creator
+
+    constructor() {
+        Groth16Verifier _instance = new Groth16Verifier(); // deployement of verifier to get instance for further use.
+        instance = _instance;
+        _owner = payable(msg.sender); //owner is contract creator
     }
 
     /**
@@ -31,17 +39,24 @@ struct CommitmentStore {
      * @param _commitment : hash of randomly generated number (nullifier, secret)
      */
 
-    function createNote(bytes32 _commitment,uint256 denomination)public payable{
-        require(!commitments[_commitment].used, "Used commitment");
-        require(denomination > 0, "Invalid denomination");
-        commitments[_commitment].used=true;
-        commitments[_commitment].owner=msg.sender;
+    function createNote(
+        bytes32 _commitment,
+        uint256 denomination
+    ) public payable {
+        if (commitments[_commitment].used) {
+            revert CommitmentAlreadyUsed();
+        }
+        if (denomination <= 0) {
+            revert InvalidAmount();
+        }
+        commitments[_commitment].used = true;
+        commitments[_commitment].owner = msg.sender;
         commitments[_commitment].createdDate = block.timestamp;
         commitments[_commitment].denomination = denomination;
         emit Created(msg.sender, msg.value);
     }
 
-      /**
+    /**
      * @dev : function for withdrawing the funds .
      * @param _pA : parameters of proof
      * @param _pB : paramters of proof
@@ -50,13 +65,35 @@ struct CommitmentStore {
      * @param _commitment : hash of commitment (nullifier,secret)
      * @param _recipient : address to which the withdrawn funds should transfer
      */
-    function claim(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient)public nonReentrant{
-      require(msg.sender==commitments[_commitment].owner,"you can't claim this note");  
-      bool success=verify(_pA, _pB, _pC, _nullifierHash, _commitment, _recipient);
-      require(success,"Invalid");
-      (bool _success, )=payable(_recipient).call{value: commitments[_commitment].denomination}("");
-       require(_success,"failed transaction");
-       nullifierHashes[_nullifierHash]=true;
+    function claim(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        bytes32 _nullifierHash,
+        bytes32 _commitment,
+        address _recipient
+    ) public nonReentrant {
+        if (msg.sender != commitments[_commitment].owner) {
+            revert InvalidClaimer();
+        }
+        bool proof_success = verify(
+            _pA,
+            _pB,
+            _pC,
+            _nullifierHash,
+            _commitment,
+            _recipient
+        );
+        if (!proof_success) {
+            revert InvalidProof();
+        }
+        nullifierHashes[_nullifierHash] = true;
+        (bool txn_success, ) = payable(_recipient).call{
+            value: commitments[_commitment].denomination
+        }("");
+        if (!txn_success) {
+            revert TransferFailed();
+        }
     }
 
     /**
@@ -64,13 +101,32 @@ struct CommitmentStore {
      * @return : it returns bool (true or false).
      */
 
-    function verify(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient)view public returns(bool) {
-    require(!nullifierHashes[_nullifierHash],"The note is already spent");
-    require(commitments[_commitment].used==true,"invalid commitment");  
-    bool success=instance.verifyProof(_pA, _pB, _pC, [uint256(_nullifierHash),uint256(_commitment),uint256(uint160(_recipient))]);
-    require(success,"Invalid Proof");    
-    return success;
-  }
+    function verify(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        bytes32 _nullifierHash,
+        bytes32 _commitment,
+        address _recipient
+    ) public view returns (bool) {
+        if (nullifierHashes[_nullifierHash]) {
+            revert NoteAlreadySpent();
+        }
+        if (!commitments[_commitment].used) {
+            revert InvalidCommitment();
+        }
+        bool success = instance.verifyProof(
+            _pA,
+            _pB,
+            _pC,
+            [
+                uint256(_nullifierHash),
+                uint256(_commitment),
+                uint256(uint160(_recipient))
+            ]
+        );
+        return success;
+    }
 
     /**
      * @dev : funnction for changing the owner of the cash, so that no other person can claim the cash.
@@ -83,20 +139,36 @@ struct CommitmentStore {
      * @param signature : it help to validate whether the cash is given by the current owner or not.
      */
 
-  function changeOwner(uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, bytes32 _nullifierHash, bytes32 _commitment, address _recipient,bytes memory signature)public nonReentrant{
-    bytes32 message = prefixed(keccak256(abi.encodePacked(_commitment)));
-    require(recoverSigner(message, signature)==commitments[_commitment].owner,"You don't have correct note"); // it repressents that it requires owner signature for changing owner.
-    bool success=verify(_pA, _pB, _pC, _nullifierHash, _commitment, _recipient);
-    require(success,"Invalid");
-    commitments[_commitment].owner=_recipient;
-  }
+    function changeOwner(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        bytes32 _nullifierHash,
+        bytes32 _commitment,
+        address _recipient,
+        bytes memory signature
+    ) public nonReentrant {
+        bytes32 message = prefixed(keccak256(abi.encodePacked(_commitment)));
+        require(
+            recoverSigner(message, signature) == commitments[_commitment].owner,
+            "You don't have correct note"
+        ); // it repressents that it requires owner signature for changing owner.
+        bool success = verify(
+            _pA,
+            _pB,
+            _pC,
+            _nullifierHash,
+            _commitment,
+            _recipient
+        );
+        require(success, "Invalid");
+        commitments[_commitment].owner = _recipient;
+    }
 
     /// signature methods.
-    function splitSignature(bytes memory sig)
-        internal
-        pure
-        returns (uint8 v, bytes32 r, bytes32 s)
-    {
+    function splitSignature(
+        bytes memory sig
+    ) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         require(sig.length == 65);
 
         assembly {
@@ -111,17 +183,19 @@ struct CommitmentStore {
         return (v, r, s);
     }
 
-    function recoverSigner(bytes32 message, bytes memory sig)
-        internal
-        pure
-        returns (address)
-    {
+    function recoverSigner(
+        bytes32 message,
+        bytes memory sig
+    ) internal pure returns (address) {
         (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
         return ecrecover(message, v, r, s);
     }
 
     /// builds a prefixed hash to mimic the behavior of eth_sign.
     function prefixed(bytes32 hash) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+        return
+            keccak256(
+                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
+            );
     }
 }
