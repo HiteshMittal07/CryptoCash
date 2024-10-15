@@ -12,3 +12,4 @@ artifacts
 
 # Local Netlify folder
 .netlify
+contracts/slither-env
