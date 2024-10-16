@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
-import "./verifier.sol";
+pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+interface IGroth16Verifier {
+    function verifyProof(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[3] calldata _pubSignals
+    ) external view returns (bool);
+}
 
 contract Main is ReentrancyGuard {
     error CommitmentAlreadyUsed();
@@ -11,6 +19,8 @@ contract Main is ReentrancyGuard {
     error TransferFailed();
     error NoteAlreadySpent();
     error InvalidCommitment();
+    error IncorrectNote();
+
     struct CommitmentStore {
         bool used;
         bool verified;
@@ -20,18 +30,28 @@ contract Main is ReentrancyGuard {
         uint256 spentDate;
         uint256 denomination;
     }
-    // address payable public owner;
-    // payable constructor can recieve ethers
-    event Created(address creator, uint amount);
-    mapping(bytes32 => bool) public nullifierHashes; // Nuffifier Hashes are used to nullify a BunnyNote so we know they have been spent
-    mapping(bytes32 => CommitmentStore) public commitments; // stores notes details corresponding to commitment hash.
-    address payable public _owner;
-    Groth16Verifier instance; //stores the instance of deployed verifier contract on chain.
 
-    constructor() {
-        Groth16Verifier _instance = new Groth16Verifier(); // deployement of verifier to get instance for further use.
-        instance = _instance;
-        _owner = payable(msg.sender); //owner is contract creator
+    mapping(bytes32 => bool) public nullifierHashes; // Nuffifier Hashes are used to nullify a CashNote so we know they have been spent
+    mapping(bytes32 => CommitmentStore) public commitments; // stores notes details corresponding to commitment hash.
+    IGroth16Verifier immutable instance; //stores the instance of deployed verifier contract on chain.
+
+    event Created(address creator, uint amount);
+
+    modifier NoteAlreadyUsed(bytes32 _nullifierHash) {
+        if (nullifierHashes[_nullifierHash]) {
+            revert NoteAlreadySpent();
+        }
+        _;
+    }
+    modifier CommitmentValidation(bytes32 _commitment) {
+        if (!commitments[_commitment].used) {
+            revert InvalidCommitment();
+        }
+        _;
+    }
+
+    constructor(address verifier_instance) {
+        instance = IGroth16Verifier(verifier_instance);
     }
 
     /**
@@ -42,11 +62,11 @@ contract Main is ReentrancyGuard {
     function createNote(
         bytes32 _commitment,
         uint256 denomination
-    ) public payable {
+    ) external payable {
         if (commitments[_commitment].used) {
             revert CommitmentAlreadyUsed();
         }
-        if (denomination <= 0) {
+        if (denomination <= 0 && msg.value != denomination) {
             revert InvalidAmount();
         }
         commitments[_commitment].used = true;
@@ -72,8 +92,16 @@ contract Main is ReentrancyGuard {
         bytes32 _nullifierHash,
         bytes32 _commitment,
         address _recipient
-    ) public nonReentrant {
+    )
+        external
+        nonReentrant
+        NoteAlreadyUsed(_nullifierHash)
+        CommitmentValidation(_commitment)
+    {
         if (msg.sender != commitments[_commitment].owner) {
+            revert InvalidClaimer();
+        }
+        if (msg.sender != _recipient) {
             revert InvalidClaimer();
         }
         bool proof_success = verify(
@@ -97,38 +125,6 @@ contract Main is ReentrancyGuard {
     }
 
     /**
-     * @dev : to check whether the notes is valid , spent or not.
-     * @return : it returns bool (true or false).
-     */
-
-    function verify(
-        uint256[2] calldata _pA,
-        uint256[2][2] calldata _pB,
-        uint256[2] calldata _pC,
-        bytes32 _nullifierHash,
-        bytes32 _commitment,
-        address _recipient
-    ) public view returns (bool) {
-        if (nullifierHashes[_nullifierHash]) {
-            revert NoteAlreadySpent();
-        }
-        if (!commitments[_commitment].used) {
-            revert InvalidCommitment();
-        }
-        bool success = instance.verifyProof(
-            _pA,
-            _pB,
-            _pC,
-            [
-                uint256(_nullifierHash),
-                uint256(_commitment),
-                uint256(uint160(_recipient))
-            ]
-        );
-        return success;
-    }
-
-    /**
      * @dev : funnction for changing the owner of the cash, so that no other person can claim the cash.
      * @param _pA : parameter of proof
      * @param _pB : parameter of proof
@@ -147,13 +143,19 @@ contract Main is ReentrancyGuard {
         bytes32 _commitment,
         address _recipient,
         bytes memory signature
-    ) public nonReentrant {
+    )
+        external
+        nonReentrant
+        CommitmentValidation(_commitment)
+        NoteAlreadyUsed(_nullifierHash)
+    {
         bytes32 message = prefixed(keccak256(abi.encodePacked(_commitment)));
-        require(
-            recoverSigner(message, signature) == commitments[_commitment].owner,
-            "You don't have correct note"
-        ); // it repressents that it requires owner signature for changing owner.
-        bool success = verify(
+        if (
+            recoverSigner(message, signature) != commitments[_commitment].owner
+        ) {
+            revert IncorrectNote();
+        } // it repressents that it requires owner signature for changing owner.
+        bool proof_success = verify(
             _pA,
             _pB,
             _pC,
@@ -161,7 +163,9 @@ contract Main is ReentrancyGuard {
             _commitment,
             _recipient
         );
-        require(success, "Invalid");
+        if (!proof_success) {
+            revert InvalidProof();
+        }
         commitments[_commitment].owner = _recipient;
     }
 
@@ -197,5 +201,37 @@ contract Main is ReentrancyGuard {
             keccak256(
                 abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
             );
+    }
+
+    /**
+     * @dev : to check whether the notes is valid , spent or not.
+     * @return : it returns bool (true or false).
+     */
+
+    function verify(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        bytes32 _nullifierHash,
+        bytes32 _commitment,
+        address _recipient
+    )
+        public
+        view
+        CommitmentValidation(_commitment)
+        NoteAlreadyUsed(_nullifierHash)
+        returns (bool)
+    {
+        bool success = instance.verifyProof(
+            _pA,
+            _pB,
+            _pC,
+            [
+                uint256(_nullifierHash),
+                uint256(_commitment),
+                uint256(uint160(_recipient))
+            ]
+        );
+        return success;
     }
 }
