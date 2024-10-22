@@ -20,7 +20,7 @@ contract Main is ReentrancyGuard {
     error NoteAlreadySpent();
     error InvalidCommitment();
     error IncorrectNote();
-
+    // struct for storing the information about the note.
     struct CommitmentStore {
         bool used;
         bool verified;
@@ -31,10 +31,16 @@ contract Main is ReentrancyGuard {
         uint256 denomination;
     }
 
-    mapping(bytes32 => bool) public nullifierHashes; // Nuffifier Hashes are used to nullify a CashNote so we know they have been spent
-    mapping(bytes32 => CommitmentStore) public commitments; // stores notes details corresponding to commitment hash.
-    IGroth16Verifier immutable instance; //stores the instance of deployed verifier contract on chain.
+    // Nuffifier Hashes are used to nullify a note so we know they have been spent.
+    mapping(bytes32 => bool) public nullifierHashes;
 
+    // stores notes details corresponding to commitment hash.
+    mapping(bytes32 => CommitmentStore) public commitments;
+
+    // stores the instance of interface of deployed verifier contract on chain.
+    IGroth16Verifier immutable instance;
+
+    // event for crypto cash creation.
     event Created(address creator, uint amount);
 
     modifier NoteAlreadyUsed(bytes32 _nullifierHash) {
@@ -50,6 +56,9 @@ contract Main is ReentrancyGuard {
         _;
     }
 
+    /**
+     * @param verifier_instance address of deployed verified contract.
+     */
     constructor(address verifier_instance) {
         instance = IGroth16Verifier(verifier_instance);
     }
@@ -83,7 +92,9 @@ contract Main is ReentrancyGuard {
      * @param _pC : private parameters of proof
      * @param _nullifierHash : hash of nullifierhash of nullifier
      * @param _commitment : hash of commitment (nullifier,secret)
-     * @param _recipient : address to which the withdrawn funds should transfer
+     * @param _recipient : address to which the withdrawn funds should transfer.
+     * @notice only the creator of proof can claim the note.
+     * Follows the CEI pattern.
      */
     function claim(
         uint256[2] calldata _pA,
@@ -98,10 +109,11 @@ contract Main is ReentrancyGuard {
         NoteAlreadyUsed(_nullifierHash)
         CommitmentValidation(_commitment)
     {
-        if (msg.sender != commitments[_commitment].owner) {
-            revert InvalidClaimer();
-        }
-        if (msg.sender != _recipient) {
+        // checks the proof creator is msg.sender.
+        if (
+            msg.sender != commitments[_commitment].owner ||
+            msg.sender != _recipient
+        ) {
             revert InvalidClaimer();
         }
         bool proof_success = verify(
@@ -134,7 +146,6 @@ contract Main is ReentrancyGuard {
      * @param _recipient : address to which the withdrawn funds should transfer
      * @param signature : it help to validate whether the cash is given by the current owner or not.
      */
-
     function changeOwner(
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
@@ -207,7 +218,6 @@ contract Main is ReentrancyGuard {
      * @dev : to check whether the notes is valid , spent or not.
      * @return : it returns bool (true or false).
      */
-
     function verify(
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
